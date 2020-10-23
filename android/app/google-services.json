@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "217608915474",
+    "firebase_url": "https://agiiza-liquors.firebaseio.com",
+    "project_id": "agiiza-liquors",
+    "storage_bucket": "agiiza-liquors.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217608915474:android:97a3bb0a34d910743ba6cb",
+        "android_client_info": {
+          "package_name": "com.example.agiiza"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC1N6xLE2TYI1oPteBmNFsTh6RgK09jV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217608915474:android:b810fb69fafa5d283ba6cb",
+        "android_client_info": {
+          "package_name": "com.example.agiiza_stores"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC1N6xLE2TYI1oPteBmNFsTh6RgK09jV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217608915474:android:8c82c04a15a531ac3ba6cb",
+        "android_client_info": {
+          "package_name": "com.example.map_test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC1N6xLE2TYI1oPteBmNFsTh6RgK09jV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217608915474-me6nm3eh1lcllq5qqdgkklevee5hqq60.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
