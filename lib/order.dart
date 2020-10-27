@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
-import 'currentlocation.dart';
+import 'location.dart';
 import 'events.dart';
 import 'store.dart';
 import 'main.dart';
@@ -85,14 +85,13 @@ class _OrderTabState extends State<OrderTab> {
                 padding: EdgeInsets.only(left: 10, right: 10),
                 // child: OrderList(status: '0'),
                 child: StreamBuilder<QuerySnapshot>(
-                  stream:  //orders received and not processed yet
-                       FirebaseFirestore.instance
+                  stream: //orders received and not processed yet
+                      FirebaseFirestore.instance
                           .collection('Orders')
                           .where('storeId', isEqualTo: storeId)
                           .where('status', isEqualTo: orderSelected)
                           .orderBy('timeStamp', descending: false)
                           .snapshots(),
-                      
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasError)
@@ -127,7 +126,8 @@ class _OrderTabState extends State<OrderTab> {
                                 return OrderCard(
                                   customerName: document.data()['contactName'],
                                   dateTime: document.data()['timestamp'],
-                                  imageUrl: fetchImageUrl( document.data()['liquorId']),
+                                  imageUrl: fetchImageUrl(
+                                      document.data()['liquorId']),
                                   orderId: document.data()['orderId'],
                                   statusCode: document.data()['statusCode'],
                                   amountSpent: document.data()['totalAmount'],
@@ -176,7 +176,7 @@ class _OrderTabState extends State<OrderTab> {
                             print('Processing');
                           },
                         ),
-                  orderSelected == 2 
+                  orderSelected == 2
                       ? orderBtn(context, 'Completed', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
@@ -409,11 +409,133 @@ class OrderCard extends StatelessWidget {
 }
 
 class OrderDetails extends StatefulWidget {
+  final orderId;
+  const OrderDetails({Key key, this.orderId}) : super(key: key);
   @override
   _OrderDetailsState createState() => _OrderDetailsState();
 }
 
 class _OrderDetailsState extends State<OrderDetails> {
+  GoogleMapController _controller;
+  final Set<Marker> _markers = {};
+  bool _isLoading;
+  var _orderDate,
+      _orderTime,
+      _customerName,
+      _orderLocation,
+      _timeStamp,
+      _imageUrl,
+      _liquorId,
+      _liquorName,
+      _liquorVolume,
+      _liquorPrice,
+      _customerPhone,
+      _liquorQty,
+      _totalAmt,
+      _orderStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOrderDetails();
+  }
+
+  _onMapCreated(GoogleMapController controller1) {
+    _controller = controller1;
+    setState(() {
+      _markers.add(Marker(
+          markerId: MarkerId("0"),
+          position: LatLng(convertToDouble(_orderLocation, 0),
+              convertToDouble(_orderLocation, 1)),
+          infoWindow: InfoWindow(
+              title: 'Your Store',
+              snippet: 'This is the Selected Store Location')));
+    });
+    _setMapStyle();
+  }
+
+  _setMapStyle() async {
+    String style =
+        await DefaultAssetBundle.of(context).loadString('assets/mapstyle.json');
+    _controller.setMapStyle(style);
+  }
+
+  _orderMap() {
+    return GoogleMap(
+      markers: _markers,
+      initialCameraPosition: CameraPosition(
+        target: LatLng(convertToDouble(_orderLocation, 0),
+            convertToDouble(_orderLocation, 1)),
+        zoom: 14.4746,
+      ),
+      onMapCreated: _onMapCreated,
+      zoomGesturesEnabled: true,
+      zoomControlsEnabled: false,
+      // onCameraMove: _onCameraMove,
+      myLocationEnabled: true,
+      compassEnabled: false,
+      myLocationButtonEnabled: false,
+    );
+  }
+
+  convertToDouble(lat, step) {
+    lat = lat.replaceAll('LatLng', '');
+    lat = lat.replaceAll('(', '');
+    lat = lat.replaceAll(')', '');
+    lat.split(',');
+
+    // turn this string to double
+    return double.parse(lat.split(',')[step]);
+  }
+
+  fetchOrderDetails() {
+    _isLoading = true;
+    FirebaseFirestore.instance
+        .collection('Orders')
+        .where('orderId', isEqualTo: widget.orderId)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.docs.length > 0) {
+        setState(() {
+          _customerName = value.docs[0].data()['contactName'];
+          _customerPhone = value.docs[0].data()['phoneNumber'];
+          _orderLocation = value.docs[0].data()['location'];
+          _timeStamp = value.docs[0].data()['timeStamp'];
+          _liquorId = value.docs[0].data()['liquorId'];
+          _liquorQty = value.docs[0].data()['totalQty'];
+          _totalAmt = value.docs[0].data()['totalAmount'];
+          _orderStatus = value.docs[0].data()['statusCode'];
+        });
+        
+        DateTime myDateTime = (_timeStamp).toDate();
+       _orderDate= DateFormat.yMMMd().format(myDateTime).toString();
+      _orderTime = DateFormat.jm().format(myDateTime).toString();
+
+        fetchLiquorDetails(_liquorId);
+      }
+    });
+  }
+
+  fetchLiquorDetails(liqId) {
+    _isLoading = true;
+    FirebaseFirestore.instance
+        .collection('Liquor')
+        .where('docId', isEqualTo: liqId)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.docs.length > 0) {
+        setState(() {
+          _imageUrl = value.docs[0].data()['contactName'];
+          _liquorName = value.docs[0].data()['liquorName'];
+          _liquorPrice = value.docs[0].data()['liquorPrice'];
+          _liquorVolume = value.docs[0].data()['liquorVolume'];
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -421,7 +543,7 @@ class _OrderDetailsState extends State<OrderDetails> {
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         centerTitle: true,
-        title: Text('Gj5dFfhG7',
+        title: Text(widget.orderId,
             style: TextStyle(
                 color: Color(0xfff4f4f4),
                 fontSize: 30,
@@ -435,12 +557,12 @@ class _OrderDetailsState extends State<OrderDetails> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text('12:33 am',
+                Text(_orderTime,
                     style: TextStyle(
                       color: Color(0x4fe1e1e1),
                       fontSize: 15,
                     )),
-                Text('09/09/2020',
+                Text(_orderDate,
                     style: TextStyle(
                       color: Color(0x4fe1e1e1),
                       fontSize: 15,
@@ -466,14 +588,14 @@ class _OrderDetailsState extends State<OrderDetails> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text("Leon Kipkoech",
+                Text(_customerName,
                     style: TextStyle(
                         color: Color(0xffe1e1e1),
                         fontSize: 15,
                         fontWeight: FontWeight.bold)),
                 GestureDetector(
                   onTap: () {
-                    showAlertDialog(context, '0715856246', 0);
+                    showAlertDialog(context, _customerPhone, 0);
                   },
                   child: Container(
                       decoration: BoxDecoration(
@@ -501,7 +623,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text('+254712345678',
+                Text(_customerPhone,
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -518,7 +640,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text('2',
+                Text(_liquorQty,
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -535,7 +657,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text('2,400 KES',
+                Text(_totalAmt,
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -568,9 +690,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
                 child: Column(
                   children: [
-                    orderListItem(context, "Gilbey's gin", '2', '750'),
-                    orderListItem(context, "Chrome", '1', '750'),
-                    orderListItem(context, "Red Label", '1', '750'),
+                    orderListItem(context, _liquorName, _liquorQty,_liquorVolume, _liquorPrice),
                   ],
                 )),
             SizedBox(height: 10),
@@ -658,4 +778,44 @@ class _OrderDetailsState extends State<OrderDetails> {
       ),
     );
   }
+}
+
+Widget orderListItem(context, liquorname, qty, litres,price) {
+  return Container(
+    margin: EdgeInsets.only(top: 10, bottom: 10),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width * 0.3,
+          child: Text(liquorname,
+              style: TextStyle(
+                color: Color(0xffe1e1e1),
+                fontSize: 15,
+              )),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.3,
+          child: Center(
+            child: Text(qty,
+                style: TextStyle(
+                  color: Color(0xffe1e1e1),
+                  fontSize: 15,
+                )),
+          ),
+        ),
+        Text(litres + " ml",
+            style: TextStyle(
+              color: Color(0xffe1e1e1),
+              fontSize: 15,
+            )),
+            Text(price + " KES",
+            style: TextStyle(
+              color: Color(0xffe1e1e1),
+              fontSize: 15,
+            )),
+      ],
+    ),
+  );
 }

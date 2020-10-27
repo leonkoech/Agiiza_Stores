@@ -5,7 +5,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/date_symbols.dart';
 import 'package:intl/intl.dart';
-import 'currentlocation.dart';
+import 'location.dart';
 import 'events.dart';
 import 'order.dart';
 import 'store.dart';
@@ -2196,37 +2196,3 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
 //     throw 'Could not launch $url';
 //   }
 // }
-Widget orderListItem(context, liquorname, qty, litres) {
-  return Container(
-    margin: EdgeInsets.only(top: 10, bottom: 10),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Container(
-          width: MediaQuery.of(context).size.width * 0.3,
-          child: Text(liquorname,
-              style: TextStyle(
-                color: Color(0xffe1e1e1),
-                fontSize: 15,
-              )),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width * 0.3,
-          child: Center(
-            child: Text(qty,
-                style: TextStyle(
-                  color: Color(0xffe1e1e1),
-                  fontSize: 15,
-                )),
-          ),
-        ),
-        Text(litres + " ml",
-            style: TextStyle(
-              color: Color(0xffe1e1e1),
-              fontSize: 15,
-            )),
-      ],
-    ),
-  );
-}

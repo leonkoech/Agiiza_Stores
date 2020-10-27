@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'currentlocation.dart';
+import 'location.dart';
 import 'main.dart';
 //  firebase plugins
 import 'package:firebase_core/firebase_core.dart';
