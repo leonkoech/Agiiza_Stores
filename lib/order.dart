@@ -717,7 +717,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text('Received',
+                Text(_orderStatus==0?'Received':_orderStatus==1?'processing':_orderStatus==2?'completed':'cancelled',
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -728,7 +728,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                         context: context,
                         builder: (context) {
                           return OrderStatusPopup(
-                              status: 1,
+                              status: _orderStatus,
                               width: MediaQuery.of(context).size.width * 0.91);
                         });
                   },
@@ -770,7 +770,9 @@ class _OrderDetailsState extends State<OrderDetails> {
                     color: Color(0xffe1e1e1),
                   ),
                   height: 140,
-                  width: MediaQuery.of(context).size.width - 20),
+                  width: MediaQuery.of(context).size.width - 20,
+                  child: _orderMap(),
+                  ),
             ),
             SizedBox(height: 20),
           ],
@@ -818,4 +820,154 @@ Widget orderListItem(context, liquorname, qty, litres,price) {
       ],
     ),
   );
+}
+
+
+class OrderStatusPopup extends StatefulWidget {
+  final int status;
+  final double width;
+  const OrderStatusPopup({Key key, @required this.status, @required this.width})
+      : super(key: key);
+  @override
+  _OrderStatusPopupState createState() => _OrderStatusPopupState();
+}
+
+class _OrderStatusPopupState extends State<OrderStatusPopup> {
+  int _value = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      backgroundColor: Color(0xff16172a),
+      elevation: 10,
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.55,
+        width: widget.width,
+        padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              "Order number",
+              style: TextStyle(
+                  fontSize: 30,
+                  color: Color(0xffe1e1e1),
+                  fontWeight: FontWeight.bold),
+            ),
+            Text(
+              "Change Order Status",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0x9fe1e1e1)),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _value = 0),
+              child: Container(
+                height: 56,
+                width: widget.width,
+                decoration: BoxDecoration(
+                  color: _value == 0 ? Color(0xffffea81) : Colors.transparent,
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                  border: Border.all(
+                      color:
+                          _value == 0 ? Color(0xffffea81) : Color(0xfff4f4f4),
+                      width: 1.0),
+                ),
+                child: Center(
+                    child: Text('Received',
+                        style: TextStyle(
+                            color: _value == 0
+                                ? Color(0xff16172a)
+                                : Color(0xfff4f4f4)))),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _value = 2),
+              child: Container(
+                height: 56,
+                width: widget.width,
+                decoration: BoxDecoration(
+                  color: _value == 2 ? Color(0xff81c6ff) : Colors.transparent,
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                  border: Border.all(
+                      color:
+                          _value == 2 ? Color(0xff81c6ff) : Color(0xfff4f4f4),
+                      width: 1.0),
+                ),
+                child: Center(
+                    child: Text('Processing',
+                        style: TextStyle(color: Color(0xfff4f4f4)))),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _value = 1),
+              child: Container(
+                height: 56,
+                width: widget.width,
+                decoration: BoxDecoration(
+                  color: _value == 1 ? Color(0xff92ff81) : Colors.transparent,
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                  border: Border.all(
+                      color:
+                          _value == 1 ? Color(0xff92ff81) : Color(0xfff4f4f4),
+                      width: 1.0),
+                ),
+                child: Center(
+                    child: Text('Completed',
+                        style: TextStyle(
+                            color: _value == 1
+                                ? Color(0xff16172a)
+                                : Color(0xfff4f4f4)))),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _value = 3),
+              child: Container(
+                height: 56,
+                width: widget.width,
+                decoration: BoxDecoration(
+                  color: _value == 3 ? Color(0xffff8181) : Colors.transparent,
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                  border: Border.all(
+                      color:
+                          _value == 3 ? Color(0xffff8181) : Color(0xfff4f4f4),
+                      width: 1.0),
+                ),
+                child: Center(
+                    child: Text('Cancelled',
+                        style: TextStyle(color: Color(0xfff4f4f4)))),
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.35,
+                  child: Center(
+                      child: Text('Cancel',
+                          style: TextStyle(
+                              color: Color(0xfff4f4f4), fontSize: 12))),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.35,
+                  height: 50,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: Color(0xffff8181)),
+                  child: Center(
+                      child: Text('Confirm',
+                          style: TextStyle(
+                              color: Color(0xfff4f4f4), fontSize: 12))),
+                )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
