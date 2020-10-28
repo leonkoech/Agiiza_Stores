@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,9 @@ import 'package:intl/date_symbols.dart';
 import 'package:intl/intl.dart';
 import 'location.dart';
 import 'events.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:encrypt/encrypt.dart' as enc;
+
 import 'order.dart';
 import 'store.dart';
 import 'liquor.dart';
@@ -32,28 +36,10 @@ void main() async {
 // add firebase to the project now
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  FirebaseAuth auth = FirebaseAuth.instance;
-
-  bool isLoggedIn() {
-    final User user = auth.currentUser;
-    final uid = user.uid;
-    bool logged;
-    if (uid == null) {
-      logged = false;
-    } else {
-      // check local storage if it's stored
-      // when a user logs in save theis credentials
-      logged = true;
-    }
-    print(logged);
-    return logged;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Agiiza App',
+      title: 'Agiiza Stores',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         // This makes the visual density adapt to the platform that you run
@@ -62,7 +48,98 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         scaffoldBackgroundColor: Color(0xff16172A),
       ),
-      home: isLoggedIn != null ? LandingPage() : HomePage(),
+      home: Loadingpage(),
+    );
+  }
+}
+
+class Loadingpage extends StatefulWidget {
+  @override
+  _LoadingpageState createState() => _LoadingpageState();
+}
+
+class _LoadingpageState extends State<Loadingpage> {
+  bool _isLoading = true;
+  bool _isLoggedIn = false;
+  var email1, password1;
+
+  @override
+  void initState() {
+    super.initState();
+    isLoggedIn();
+  }
+
+  void isLoggedIn() {
+    doesFileExist().then((value) {
+      setState(() {
+        _isLoggedIn = value;
+      });
+      value
+          ? logUserIn()
+          : Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => LandingPage()),
+              (Route<dynamic> route) => false);
+    });
+  }
+
+  void logUserIn() async {
+    await readEmailAuthDetails().then((fetchedEmail) async {
+      await readPasswordAuthDetails().then((fetchedPassword) {
+        setState(() {
+          email1 = fetchedEmail;
+          password1 = fetchedPassword;
+        });
+        print(fetchedEmail);
+
+        print(email1);
+        signUserIn();
+      });
+    });
+  }
+
+  void signUserIn() async {
+    print(email1);
+    try {
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email1, password: password1)
+          .then((value) {
+        setState(() {
+          _isLoading = false;
+          print(_isLoading);
+        });
+
+        Fluttertoast.showToast(
+            msg: "Successfully logged in",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Color(0xff16172a),
+            textColor: Color(0xfff4f4f4),
+            fontSize: 10.0);
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomePage()),
+            (Route<dynamic> route) => false);
+      }).catchError((err) {
+        print(err);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xff16172a),
+      body: Container(
+        child: Center(
+          child: SpinKitChasingDots(
+            color: Color(0xffff8181),
+            size: 50.0,
+            duration: Duration(milliseconds: 2000),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -167,33 +244,48 @@ class _LoginPageState extends State<LoginPage> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    loginUser() async {
+    load() {
       setState(() {
-        _isLoading = true;
-        print(_isLoading);
+        _isLoading = !_isLoading;
       });
-      try {
-        await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
-                email: emailController.text, password: passwordController.text)
-            .then((value) {
-          setState(() {
-            _isLoading = false;
-            print(_isLoading);
-          });
+    }
 
-          Fluttertoast.showToast(
-              msg: "Successfully logged in",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Color(0xff16172a),
-              textColor: Color(0xfff4f4f4),
-              fontSize: 10.0);
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false);
-        });
+    loginUser() async {
+      load();
+      try {
+        if (emailController.text != '' && passwordController.text != '')
+          await FirebaseAuth.instance
+              .signInWithEmailAndPassword(
+                  email: emailController.text,
+                  password: passwordController.text)
+              .then((value) {
+            setState(() {
+              _isLoading = false;
+              print(_isLoading);
+            });
+
+            Fluttertoast.showToast(
+                msg: "Successfully logged in",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Color(0xff16172a),
+                textColor: Color(0xfff4f4f4),
+                fontSize: 10.0);
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (Route<dynamic> route) => false);
+          }).catchError((err) {
+            load();
+            Fluttertoast.showToast(
+                msg: err,
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Color(0xff16172a),
+                textColor: Color(0xfff4f4f4),
+                fontSize: 10.0);
+          });
       } catch (e) {
         var message;
         if (Platform.isAndroid) {
@@ -262,7 +354,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 15),
               textinput(context, 'Email', emailController),
               SizedBox(height: 15),
-              textinput(context, 'Password', passwordController),
+              passwordInput(context, 'Password', passwordController),
               SizedBox(height: 25),
               GestureDetector(
                   onTap: () {
@@ -460,6 +552,35 @@ Widget textinput(BuildContext context, String hinttext,
   );
 }
 
+Widget numberinput(BuildContext context, String hinttext,
+    TextEditingController thecontroller) {
+  //  @override
+  // void dispose() {
+  //   // Clean up the controller when the widget is disposed.
+  //   thecontroller.dispose();
+  // }
+  return Container(
+    width: MediaQuery.of(context).size.width - 40,
+    height: 50,
+    margin: EdgeInsets.only(top: 7, bottom: 6),
+    child: TextField(
+      keyboardType: TextInputType.number,
+      controller: thecontroller,
+      style: TextStyle(color: Color(0xffe1e1e1), fontSize: 13),
+      decoration: InputDecoration(
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xffff8181), width: 1.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xffe1e1e1), width: 1.0),
+          ),
+          hintText: hinttext,
+          hintStyle: TextStyle(color: Color(0xffe1e1e1), fontSize: 11)),
+    ),
+  );
+}
+
 Widget backbtn(Color bgcolor, Color txtcolor, String btntext, double btnwidth,
     bool topleft, bool topright, bool arrow) {
   return Container(
@@ -522,7 +643,7 @@ class _SignUpState extends State<SignUp> {
 //   });
   // Initially password is obscure
   bool _obscureText = true;
-
+  bool _isLoading = false;
   String _password;
 
   // Toggles the password show status
@@ -550,16 +671,39 @@ class _SignUpState extends State<SignUp> {
     });
   }
 
+  load() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
+  }
+
   Future<bool> createUser() async {
     bool results;
     // check if passwords match
+    load();
     if (passwordController.text == confirmPasswordController.text) {
       // run the normal code
       try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: emailController.text, password: passwordController.text);
-        // go to the next page
-        results = true;
+        await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
+                email: emailController.text, password: passwordController.text)
+            .then((value) {
+          // go to the next page
+          load();
+          results = true;
+        }).catchError((value) {
+          load();
+          print(value);
+          results = false;
+          Fluttertoast.showToast(
+              msg: "The Password entered is too weak",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Color(0xff16172a),
+              textColor: Color(0xfff4f4f4),
+              fontSize: 10.0);
+        });
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           // put toast here. Also, check if it matches with confirm password
@@ -611,13 +755,41 @@ class _SignUpState extends State<SignUp> {
     return results;
   }
 
+  checkStore() {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    load();
+    final User user = auth.currentUser;
+    final uid = user.uid;
+    FirebaseFirestore.instance
+        .collection('Stores')
+        .where('storeId', isEqualTo: uid)
+        .limit(1)
+        .get()
+        .then((value) {
+      addUserInfo();
+    }).catchError((onError) {
+      print('this is the error my king');
+      Fluttertoast.showToast(
+          msg: "No Location Selected",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xff16172a),
+          textColor: Color(0xfff4f4f4),
+          fontSize: 10.0);
+      load();
+    });
+  }
+
   void addUserInfo() async {
     // use the name of the store to create the store. The store name should be unique
+
     FirebaseAuth auth = FirebaseAuth.instance;
 
     final User user = auth.currentUser;
     final uid = user.uid;
     final databaseReference = FirebaseFirestore.instance;
+
     await databaseReference.collection("Stores").doc(uid).update({
       'storeName': nameController.text,
       'storeId': uid,
@@ -625,9 +797,24 @@ class _SignUpState extends State<SignUp> {
       'lastName': lastNameController.text,
       'phoneNumber': phoneNumberController.text,
     }).then((value) {
+      writeAuthDetails(emailController.text, passwordController.text)
+          .then((value) {
+        load();
+        nextStep();
+        Fluttertoast.showToast(
+            msg: "Store has been created",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Color(0xff16172a),
+            textColor: Color(0xfff4f4f4),
+            fontSize: 10.0);
+      });
+    }).catchError((err) {
+      load();
       Fluttertoast.showToast(
-          msg: "Store has been created",
-          toastLength: Toast.LENGTH_SHORT,
+          msg: "No Location Selected",
+          toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
@@ -684,7 +871,7 @@ class _SignUpState extends State<SignUp> {
 
   _onMapCreated(GoogleMapController controller) {
     controller1 = controller;
-    getStoreLatLng();
+    // getStoreLatLng();
 
     setState(() {
       // add markers
@@ -713,27 +900,39 @@ class _SignUpState extends State<SignUp> {
 
     final User user = auth.currentUser;
     final uid = user.uid;
-    DocumentSnapshot document =
-        await FirebaseFirestore.instance.collection('Stores').doc(uid).get();
-    print(document.data()["location"]);
-    var lat = convertToDouble(document.data()['location'], 0);
-    var lng = convertToDouble(document.data()['location'], 1);
-    setState(() {
-      _initialPosition = LatLng(lat, lng);
-    });
-    print(_initialPosition);
-    if (_initialPosition == null) {
+    if (uid != null) {
+      FirebaseFirestore.instance
+          .collection('Stores')
+          .doc(uid)
+          .get()
+          .then((value) {
+        print(value.data()["location"]);
+        var lat = convertToDouble(value.data()['location'], 0);
+        var lng = convertToDouble(value.data()['location'], 1);
+        setState(() {
+          _initialPosition = LatLng(lat, lng);
+          var storeName = nameController.text;
+          _markers.clear();
+          _markers.add(Marker(
+              markerId: MarkerId("0"),
+              position: _initialPosition,
+              infoWindow: InfoWindow(
+                  title: storeName == '' ? 'Your Store' : storeName,
+                  snippet: 'This is the current location of your store')));
+        });
+        _currentLocation(_initialPosition);
+        print(_initialPosition);
+        if (_initialPosition == null) {
+          _getUserLocation();
+        }
+      }).catchError((onError) {
+        print(onError);
+        _getUserLocation();
+      });
+    } else {
+      print('location not found');
       _getUserLocation();
     }
-    var storeName = nameController.text;
-    _markers.clear();
-    _markers.add(Marker(
-        markerId: MarkerId("0"),
-        position: _initialPosition,
-        infoWindow: InfoWindow(
-            title: storeName == '' ? 'Your Store' : storeName,
-            snippet: 'This is the current location of your store')));
-    _currentLocation(_initialPosition);
   }
 
   void setMapStyle() async {
@@ -768,145 +967,20 @@ class _SignUpState extends State<SignUp> {
   Widget build(BuildContext context) {
     double halfwidth = MediaQuery.of(context).size.width * 0.5;
     double childscrollviewheight = MediaQuery.of(context).size.height - 50;
-    return steps == 0
+    return _isLoading
         ? Scaffold(
             backgroundColor: Color(0xff16172a),
             body: Container(
-              // height: childscrollviewheight,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 50),
-                child: SizedBox(
-                  height: childscrollviewheight,
-                  child: Column(
-                    // mainAxisAlignment: MainAxisAlignment.start,
-                    // // crossAxisAlignment: CrossAxisAlignment.center,
-                    //  crossAxisAlignment: CrossAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      Container(
-                        padding: EdgeInsets.only(left: 20),
-                        width: 320,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Text('Create account',
-                                style: TextStyle(
-                                    color: Color(0xffe1e1e1),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      Container(
-                        padding: EdgeInsets.only(left: 20),
-                        width: 320,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Text('Step 1 of 3',
-                                style: TextStyle(
-                                    color: Color(0xffe1e1e1), fontSize: 24)),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 15),
-
-                      Padding(
-                        padding: EdgeInsets.only(left: 20),
-                        child: Container(
-                          width: 180,
-                          child: Text('Basic Information',
-                              style: TextStyle(
-                                  color: Color(0xffe1e1e1), fontSize: 18)),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Center(
-                        child: textinput(
-                            context, 'Email Address', emailController),
-                      ),
-
-                      SizedBox(
-                        height: 15,
-                      ),
-                      Center(
-                        child:
-                            textinput(context, 'Name of Store', nameController),
-                      ),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      Center(
-                          child: textinput(
-                              context, 'Password', passwordController)),
-                      //  Padding(                     //   padding: EdgeInsets.only(left:45),
-                      //     child: Container(
-
-                      //     child:Text(
-                      //     'Password is too short',
-                      //     style:TextStyle(fontFamily:'Amiko',fontSize:16,color: Color(  0xffff8181))
-                      //   ),
-                      //   ),
-                      // ),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      Center(
-                        child: textinput(context, 'Confirm Password',
-                            confirmPasswordController),
-                      ),
-                      Spacer(),
-                      Row(children: <Widget>[
-                        GestureDetector(
-                            child: bottombtn(
-                                Color(0x002f3542),
-                                Color(0xffe1e1e1),
-                                'Back',
-                                halfwidth,
-                                false,
-                                true,
-                                false),
-                            onTap: () {
-                              Navigator.pop(context);
-                            }),
-                        GestureDetector(
-                            child: bottombtn(
-                                Color(0xffff8181),
-                                Color(0xffe1e1e1),
-                                'Next',
-                                halfwidth,
-                                true,
-                                false,
-                                false),
-                            onTap: () {
-                              // void signUpUser() async {
-                              //   // ignore: await_only_futures
-                              //   var val = await createUser;
-                              //   if (val == true) {
-                              //     // proceed
-                              //     nextStep();
-                              //     print(val);
-                              //   } else {
-                              //     // do nothing per say
-                              //     print(val);
-                              //   }
-                              // }
-
-                              // signUpUser();
-                              createUser();
-                              nextStep();
-                            })
-                      ])
-                    ],
-                  ),
+              child: Center(
+                child: SpinKitChasingDots(
+                  color: Color(0xffff8181),
+                  size: 50.0,
+                  duration: Duration(milliseconds: 2000),
                 ),
               ),
             ),
           )
-        : steps == 1
+        : steps == 0
             ? Scaffold(
                 backgroundColor: Color(0xff16172a),
                 body: Container(
@@ -943,7 +1017,7 @@ class _SignUpState extends State<SignUp> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: <Widget>[
-                                Text('Step 2 of 3',
+                                Text('Step 1 of 3',
                                     style: TextStyle(
                                         color: Color(0xffe1e1e1),
                                         fontSize: 24)),
@@ -957,7 +1031,7 @@ class _SignUpState extends State<SignUp> {
                             padding: EdgeInsets.only(left: 20),
                             child: Container(
                               width: 180,
-                              child: Text('Contact Person Details',
+                              child: Text('Basic Information',
                                   style: TextStyle(
                                       color: Color(0xffe1e1e1), fontSize: 18)),
                             ),
@@ -965,7 +1039,7 @@ class _SignUpState extends State<SignUp> {
                           SizedBox(height: 20),
                           Center(
                             child: textinput(
-                                context, 'First Name', firstNameController),
+                                context, 'Email Address', emailController),
                           ),
 
                           SizedBox(
@@ -973,16 +1047,15 @@ class _SignUpState extends State<SignUp> {
                           ),
                           Center(
                             child: textinput(
-                                context, 'Last Name', lastNameController),
+                                context, 'Name of Store', nameController),
                           ),
                           SizedBox(
                             height: 15,
                           ),
                           Center(
-                              child: textinput(context, 'Phone Number',
-                                  phoneNumberController)),
-                          //  Padding(
-                          //   padding: EdgeInsets.only(left:45),
+                              child: passwordInput(
+                                  context, 'Password', passwordController)),
+                          //  Padding(                     //   padding: EdgeInsets.only(left:45),
                           //     child: Container(
 
                           //     child:Text(
@@ -994,7 +1067,10 @@ class _SignUpState extends State<SignUp> {
                           SizedBox(
                             height: 15,
                           ),
-
+                          Center(
+                            child: passwordInput(context, 'Confirm Password',
+                                confirmPasswordController),
+                          ),
                           Spacer(),
                           Row(children: <Widget>[
                             GestureDetector(
@@ -1007,7 +1083,7 @@ class _SignUpState extends State<SignUp> {
                                     true,
                                     false),
                                 onTap: () {
-                                  prevStep();
+                                  Navigator.pop(context);
                                 }),
                             GestureDetector(
                                 child: bottombtn(
@@ -1019,8 +1095,21 @@ class _SignUpState extends State<SignUp> {
                                     false,
                                     false),
                                 onTap: () {
-                                  // load map
+                                  // void signUpUser() async {
+                                  //   // ignore: await_only_futures
+                                  //   var val = await createUser;
+                                  //   if (val == true) {
+                                  //     // proceed
+                                  //     nextStep();
+                                  //     print(val);
+                                  //   } else {
+                                  //     // do nothing per say
+                                  //     print(val);
+                                  //   }
+                                  // }
 
+                                  // signUpUser();
+                                  createUser();
                                   nextStep();
                                 })
                           ])
@@ -1030,7 +1119,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                 ),
               )
-            : steps == 2
+            : steps == 1
                 ? Scaffold(
                     backgroundColor: Color(0xff16172a),
                     body: Container(
@@ -1067,96 +1156,59 @@ class _SignUpState extends State<SignUp> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: <Widget>[
-                                    Text('Step 3 of 3',
+                                    Text('Step 2 of 3',
                                         style: TextStyle(
                                             color: Color(0xffe1e1e1),
                                             fontSize: 24)),
                                   ],
                                 ),
                               ),
+
                               SizedBox(height: 15),
+
                               Padding(
                                 padding: EdgeInsets.only(left: 20),
                                 child: Container(
-                                  width: MediaQuery.of(context).size.width - 40,
-                                  child: Text('Where is your store located',
+                                  width: 180,
+                                  child: Text('Contact Person Details',
                                       style: TextStyle(
                                           color: Color(0xffe1e1e1),
                                           fontSize: 18)),
                                 ),
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 15, left: 20),
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width - 40,
-                                  child: Text(
-                                      'Click on the map to select location',
-                                      style: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          color: Color(0x5fe1e1e1),
-                                          fontSize: 14)),
-                                ),
-                              ),
                               SizedBox(height: 20),
                               Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => Map()));
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffe1e1e1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    width:
-                                        MediaQuery.of(context).size.width - 40,
-                                    height: 280,
-                                    margin: EdgeInsets.only(top: 7, bottom: 6),
-                                    child: _initialPosition == null
-                                        ? Container(
-                                            color: Color(0xff16172a),
-                                            child: Center(
-                                              // INTRODUCE A LOADER HERE
-                                              child: Center(
-                                                child: SpinKitChasingDots(
-                                                  color: Color(0xffff8181),
-                                                  size: 30.0,
-                                                  duration: Duration(
-                                                      milliseconds: 2000),
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : GoogleMap(
-                                            markers: _markers,
-                                            initialCameraPosition:
-                                                CameraPosition(
-                                              target: _initialPosition,
-                                              zoom: 14.4746,
-                                            ),
-                                            onMapCreated: _onMapCreated,
-                                            zoomGesturesEnabled: false,
-                                            zoomControlsEnabled: false,
-                                            myLocationEnabled: true,
-                                            compassEnabled: false,
-                                            myLocationButtonEnabled: false,
-                                            onTap: (_) {
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          Map()));
-                                            },
-                                          ),
-                                  ),
-                                ),
+                                child: textinput(
+                                    context, 'First Name', firstNameController),
+                              ),
+
+                              SizedBox(
+                                height: 15,
+                              ),
+                              Center(
+                                child: textinput(
+                                    context, 'Last Name', lastNameController),
                               ),
                               SizedBox(
                                 height: 15,
                               ),
+                              Center(
+                                  child: numberinput(context, 'Phone Number',
+                                      phoneNumberController)),
+                              //  Padding(
+                              //   padding: EdgeInsets.only(left:45),
+                              //     child: Container(
+
+                              //     child:Text(
+                              //     'Password is too short',
+                              //     style:TextStyle(fontFamily:'Amiko',fontSize:16,color: Color(  0xffff8181))
+                              //   ),
+                              //   ),
+                              // ),
+                              SizedBox(
+                                height: 15,
+                              ),
+
                               Spacer(),
                               Row(children: <Widget>[
                                 GestureDetector(
@@ -1175,13 +1227,14 @@ class _SignUpState extends State<SignUp> {
                                     child: bottombtn(
                                         Color(0xffff8181),
                                         Color(0xffe1e1e1),
-                                        'Done',
+                                        'Next',
                                         halfwidth,
                                         true,
                                         false,
                                         false),
                                     onTap: () {
-                                      addUserInfo();
+                                      // load map
+                                      getStoreLatLng();
                                       nextStep();
                                     })
                               ])
@@ -1191,67 +1244,238 @@ class _SignUpState extends State<SignUp> {
                       ),
                     ),
                   )
-                : Scaffold(
-                    appBar: null,
-                    body: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('YOU ARE DONE\nCREATING YOUR STORE',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 25,
-                                    color: Color(0xffe1e1e1),
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(
-                              height: 30,
+                : steps == 2
+                    ? Scaffold(
+                        backgroundColor: Color(0xff16172a),
+                        body: Container(
+                          // height: childscrollviewheight,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.only(top: 50),
+                            child: SizedBox(
+                              height: childscrollviewheight,
+                              child: Column(
+                                // mainAxisAlignment: MainAxisAlignment.start,
+                                // // crossAxisAlignment: CrossAxisAlignment.center,
+                                //  crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.max,
+                                children: <Widget>[
+                                  Container(
+                                    padding: EdgeInsets.only(left: 20),
+                                    width: 320,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text('Create account',
+                                            style: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Container(
+                                    padding: EdgeInsets.only(left: 20),
+                                    width: 320,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text('Step 3 of 3',
+                                            style: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 24)),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 20),
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width -
+                                          40,
+                                      child: Text('Where is your store located',
+                                          style: TextStyle(
+                                              color: Color(0xffe1e1e1),
+                                              fontSize: 18)),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 15, left: 20),
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width -
+                                          40,
+                                      child: Text(
+                                          'Click on the map to select location',
+                                          style: TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                              color: Color(0x5fe1e1e1),
+                                              fontSize: 14)),
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                  Center(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => Map()));
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Color(0xffe1e1e1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        width:
+                                            MediaQuery.of(context).size.width -
+                                                40,
+                                        height: 280,
+                                        margin:
+                                            EdgeInsets.only(top: 7, bottom: 6),
+                                        child: _initialPosition == null
+                                            ? Container(
+                                                color: Color(0xff16172a),
+                                                child: Center(
+                                                  // INTRODUCE A LOADER HERE
+                                                  child: Center(
+                                                    child: SpinKitChasingDots(
+                                                      color: Color(0xffff8181),
+                                                      size: 30.0,
+                                                      duration: Duration(
+                                                          milliseconds: 2000),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : GoogleMap(
+                                                markers: _markers,
+                                                initialCameraPosition:
+                                                    CameraPosition(
+                                                  target: _initialPosition,
+                                                  zoom: 14.4746,
+                                                ),
+                                                onMapCreated: _onMapCreated,
+                                                zoomGesturesEnabled: false,
+                                                zoomControlsEnabled: false,
+                                                myLocationEnabled: true,
+                                                compassEnabled: false,
+                                                myLocationButtonEnabled: false,
+                                                onTap: (_) {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              Map()));
+                                                },
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 15,
+                                  ),
+                                  Spacer(),
+                                  Row(children: <Widget>[
+                                    GestureDetector(
+                                        child: bottombtn(
+                                            Color(0x002f3542),
+                                            Color(0xffe1e1e1),
+                                            'Back',
+                                            halfwidth,
+                                            false,
+                                            true,
+                                            false),
+                                        onTap: () {
+                                          prevStep();
+                                        }),
+                                    GestureDetector(
+                                        child: bottombtn(
+                                            Color(0xffff8181),
+                                            Color(0xffe1e1e1),
+                                            'Done',
+                                            halfwidth,
+                                            true,
+                                            false,
+                                            false),
+                                        onTap: () {
+                                          // load();
+                                          // addUserInfo();
+                                          checkStore();
+                                        })
+                                  ])
+                                ],
+                              ),
                             ),
-                            Text('Add the liquor you sell now',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Color(0xffe1e1e1), fontSize: 18)),
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Center(
-                                child: GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                        builder: (context) => AddLiquor()),
-                                    (Route<dynamic> route) => false);
-                              },
-                              child: normalbtn(context, Color(0xffff8181),
-                                  Color(0xffe1e1e1), 'Add Liquor'),
-                            )),
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Text('or',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Color(0xffe1e1e1), fontSize: 18)),
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Center(
-                                child: GestureDetector(
-                              child: borderbtn(context, Color(0xffff8181),
-                                  Color(0xffff8181), 'Skip For Now'),
-                              onTap: () {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage()),
-                                    (Route<dynamic> route) => false);
-                              },
-                            )),
-                          ],
+                          ),
                         ),
-                      ),
-                    ));
+                      )
+                    : Scaffold(
+                        appBar: null,
+                        body: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('YOU ARE DONE\nCREATING YOUR STORE',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 25,
+                                        color: Color(0xffe1e1e1),
+                                        fontWeight: FontWeight.bold)),
+                                SizedBox(
+                                  height: 30,
+                                ),
+                                Text('Add the liquor you sell now',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Color(0xffe1e1e1),
+                                        fontSize: 18)),
+                                SizedBox(
+                                  height: 25,
+                                ),
+                                Center(
+                                    child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                            builder: (context) => AddLiquor()),
+                                        (Route<dynamic> route) => false);
+                                  },
+                                  child: normalbtn(context, Color(0xffff8181),
+                                      Color(0xffe1e1e1), 'Add Liquor'),
+                                )),
+                                SizedBox(
+                                  height: 25,
+                                ),
+                                Text('or',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Color(0xffe1e1e1),
+                                        fontSize: 18)),
+                                SizedBox(
+                                  height: 25,
+                                ),
+                                Center(
+                                    child: GestureDetector(
+                                  child: borderbtn(context, Color(0xffff8181),
+                                      Color(0xffff8181), 'Skip For Now'),
+                                  onTap: () {
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                            builder: (context) => HomePage()),
+                                        (Route<dynamic> route) => false);
+                                  },
+                                )),
+                              ],
+                            ),
+                          ),
+                        ));
   }
 }
 
@@ -1565,7 +1789,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-
 class StatsCard extends StatelessWidget {
   final String maintitle;
   final int ordersReceived;
@@ -1652,280 +1875,6 @@ class StatsCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class Events extends StatefulWidget {
-  @override
-  _EventsState createState() => _EventsState();
-}
-
-class _EventsState extends State<Events> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Stack(
-        children: [
-          Align(alignment: Alignment.center, child: EventList()),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              color: Color(0xff16172a),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        child: Text(
-                            'These events will be shown in the customers apps under the events tab',
-                            style: TextStyle(
-                                fontSize: 12, color: Color(0x6fe1e1e1)))),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => CreateEvent()));
-                      },
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        height: 40,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            color: Color(0xffff8181)),
-                        child: Center(
-                            child: Text('new event',
-                                style: TextStyle(
-                                    fontSize: 12, color: Color(0xffe1e1e1)))),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // list events here
-        ],
-      ),
-    );
-  }
-}
-
-class EventList extends StatelessWidget {
-  getUserId() {
-    FirebaseAuth auth = FirebaseAuth.instance;
-
-    final User user = auth.currentUser;
-    return user.uid;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('Events')
-          // .where("storeId", isEqualTo: getUserId)
-          // .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
-        if (!snapshot.hasData)
-          return Center(
-              child: new Text(
-            'No Events To Display',
-            style: TextStyle(color: Color(0xffcccccc)),
-          ));
-
-        switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-//        return a loading screen of sorts
-            return new Center(
-              child: SpinKitChasingDots(
-                color: Color(0xffff8181),
-                size: 30.0,
-                duration: Duration(milliseconds: 2000),
-              ),
-            );
-          default:
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 68.0),
-              child: new ListView(
-                scrollDirection: Axis.vertical,
-                children: snapshot.data.docs.map((DocumentSnapshot document) {
-                  if (snapshot.data.docs != null) {
-                    return EventCard(
-                      imageUrl: document.data()['imageUrl'],
-                      startDate: document.data()['dateFrom'],
-                      description: document.data()['description'],
-                      title: document.data()['title'],
-                      endDate: document.data()['dateTo'],
-                      storeId: document.data()['storeId'],
-                      storeName: document.data()['storeName'],
-                      active: document.data()['active'],
-                      timestamp: document.data()['timestamp'],
-                      eventId: document.data()['docId'],
-                      time: DateFormat.jm()
-                          .format(document.data()['timeStamp'].toDate()),
-                      date: DateFormat.yMMMd()
-                          .format(document.data()['timeStamp'].toDate()),
-                    );
-                  } else {
-                    return new Text('No events To display');
-                  }
-                }).toList(),
-              ),
-            );
-        }
-      },
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final String title;
-  final String startDate;
-  final String endDate;
-  final String description;
-  final String imageUrl;
-  final String storeName;
-  final bool active;
-  final String storeId;
-  final String time;
-  final String date;
-  final timestamp;
-  final String eventId;
-  const EventCard(
-      {Key key,
-      @required this.title,
-      @required this.startDate,
-      @required this.endDate,
-      @required this.description,
-      @required this.active,
-      @required this.storeId,
-      @required this.storeName,
-      @required this.timestamp,
-      @required this.eventId,
-      this.time,
-      this.date,
-      this.imageUrl})
-      : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => EditEvent(
-                      active: active,
-                      startDate: startDate,
-                      endDate: endDate,
-                      eventID: eventId,
-                      description: description,
-                      title: title,
-                      timestamp: timestamp,
-                      imageUrl: imageUrl,
-                    )));
-      },
-      child: Container(
-        // image, name of event, date of event(from and to),special description
-        margin: EdgeInsets.only(top: 5, bottom: 5),
-        width: MediaQuery.of(context).size.width - 40,
-        // color should be random between the colors you used previously
-        decoration: BoxDecoration(
-            color: Color(0xffe6f1ff), borderRadius: BorderRadius.circular(6)),
-        child: Column(
-          children: [
-            imageUrl == null
-                ? null
-                : Container(
-                    child: ClipRRect(
-                        child: Image.network(imageUrl),
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(6.0),
-                            topRight: Radius.circular(6.0))),
-                    decoration: BoxDecoration(
-                        color: Color(0xff37deed),
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(6.0),
-                            topRight: Radius.circular(6.0))),
-                  ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(title.toUpperCase(),
-                      style: TextStyle(
-                          color: Color(0xff16172a),
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.45,
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('Last Modified: ' + time + ' ' + date,
-                      style: TextStyle(
-                          color: Color(0xff16172a),
-                          fontSize: 9,
-                          fontWeight: FontWeight.normal)),
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.45,
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(startDate,
-                          style: TextStyle(
-                              color: Color(0xff16172a),
-                              fontSize: 9,
-                              fontWeight: FontWeight.normal)),
-                      Text(' to ',
-                          style: TextStyle(
-                              color: Color(0xff16172a),
-                              fontSize: 9,
-                              fontWeight: FontWeight.normal)),
-                      Text(endDate,
-                          style: TextStyle(
-                              color: Color(0xff16172a),
-                              fontSize: 9,
-                              fontWeight: FontWeight.normal))
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(description,
-                      style: TextStyle(
-                          color: Color(0xff16172a),
-                          fontSize: 13,
-                          fontWeight: FontWeight.normal)),
-                )
-              ],
-            )
-          ],
-        ),
       ),
     );
   }
@@ -2047,3 +1996,126 @@ showAlertDialog(BuildContext context, String contact, int action) {
 //     throw 'Could not launch $url';
 //   }
 // }
+Widget passwordInput(BuildContext context, String hinttext,
+    TextEditingController thecontroller) {
+  //  @override
+  // void dispose() {
+  //   // Clean up the controller when the widget is disposed.
+  //   thecontroller.dispose();
+  // }
+  return Container(
+    width: MediaQuery.of(context).size.width - 40,
+    height: 50,
+    margin: EdgeInsets.only(top: 7, bottom: 6),
+    child: TextField(
+      controller: thecontroller,
+      obscureText: true,
+      style: TextStyle(color: Color(0xffe1e1e1), fontSize: 13),
+      decoration: InputDecoration(
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xffff8181), width: 1.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xffe1e1e1), width: 1.0),
+          ),
+          hintText: hinttext,
+          hintStyle: TextStyle(color: Color(0xffe1e1e1), fontSize: 11)),
+    ),
+  );
+}
+
+Future<String> get _localPath async {
+  final directory = await getApplicationDocumentsDirectory();
+
+  return directory.path;
+}
+
+Future<File> get _localFile async {
+  final path = await _localPath;
+  return File('$path/credentials.txt');
+}
+
+Future<File> writeAuthDetails(email, password) async {
+  final file = await _localFile;
+  final key = enc.Key.fromLength(32);
+  final iv = enc.IV.fromLength(8);
+
+  final encrypter = enc.Encrypter(enc.AES(key));
+
+  final encryptedPass = encrypter.encrypt(password, iv: iv);
+  String objText = '{"email": "$email", "password": "$password"}';
+
+  // Write the file.
+  return file.writeAsString(objText);
+}
+
+Future<bool> doesFileExist() async {
+  bool mybool = false;
+  try {
+    final file = await _localFile;
+
+    // Read the file.
+    String contents = await file.readAsString();
+    if (contents != null || contents != '') {
+      mybool = true;
+    } else {
+      mybool = false;
+    }
+  } catch (e) {
+    // If encountering an error, return 0.
+    print(e);
+    mybool = false;
+  }
+
+  return mybool;
+}
+
+Future<String> readEmailAuthDetails() async {
+  var mystring;
+  try {
+    final file = await _localFile;
+
+    // Read the file.
+    String contents = await file.readAsString();
+    var data = json.decode(contents);
+    mystring = data['email'].toString();
+  } catch (e) {
+    // If encountering an error, return 0.
+    print(e);
+    mystring = null;
+  }
+  return mystring;
+}
+
+Future<String> readPasswordAuthDetails() async {
+  var mystring;
+  try {
+    final file = await _localFile;
+
+    // Read the file.
+    String contents = await file.readAsString();
+    var data = json.decode(contents);
+    print(data['password']);
+
+    mystring = data['password'];
+  } catch (e) {
+    print(e);
+    // If encountering an error, return 0.
+    mystring = null;
+  }
+  return mystring;
+}
+
+Future<bool> deleteCredentials() async {
+  bool mybool;
+  try {
+    final file = await _localFile;
+
+    await file.delete();
+    mybool = true;
+  } catch (e) {
+    mybool = false;
+  }
+  return mybool;
+}

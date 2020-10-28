@@ -45,8 +45,9 @@ class _LiquorTabState extends State<LiquorTab> {
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('Liquor')
-              .where("storeId", isEqualTo: widget.userid!=null?getUserId:widget.userid)
-              // .orderBy('timestamp', descending: true)
+              .where("storeId",
+                  isEqualTo: widget.userid != null ? getUserId : widget.userid)
+              .orderBy('liquorName', descending: true)
               .snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -54,9 +55,8 @@ class _LiquorTabState extends State<LiquorTab> {
             if (!snapshot.hasData)
               return Center(
                   child: new Text(
-                    'No Liquors\nClick the button below to Add liquor',
-                    textAlign:TextAlign.center,
-                
+                'No Liquors\nClick the button below to Add liquor',
+                textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xffcccccc)),
               ));
 
@@ -138,6 +138,14 @@ class _LiquorTabState extends State<LiquorTab> {
   }
 }
 
+String getCapitalizeString(String str) {
+  String cRet = '';
+  str.split(' ').forEach((word) {
+    cRet += "${word[0].toUpperCase()}${word.substring(1).toLowerCase()} ";
+  });
+  return cRet.trim();
+}
+
 class LiquorItem extends StatelessWidget {
   final imageUrl;
   final liquorId;
@@ -156,72 +164,78 @@ class LiquorItem extends StatelessWidget {
       : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width - 40,
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.only(top: 8, bottom: 8, right: 15, left: 15),
-      decoration: BoxDecoration(
-          border: Border.all(
-            color: Color(0xfff4f4f4),
-          ),
-          borderRadius: BorderRadius.circular(6.0)),
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6.0),
-            child: Image.network(
-              imageUrl,
-              height: 70,
-              width: 70,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context)=>
+        EditLiquor(liquorId: liquorId)));
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width - 40,
+        margin: EdgeInsets.all(10),
+        
+        padding: EdgeInsets.only(top: 8, bottom: 8, right: 15, left: 15),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+            border: Border.all(
+              color: Color(0xfff4f4f4),
             ),
-          ),
-          Container(
-            height: 50,
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(liquorName,
-                    style: TextStyle(
-                        color: Color(0xfff4f4f4),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(liquorQty,
-                        style: TextStyle(
-                            color: Color(0xfff4f4f4),
-                            fontSize: 9,
-                            fontWeight: FontWeight.normal)),
-                    Text(liquorPrice,
-                        style: TextStyle(
-                            color: Color(0xfff4f4f4),
-                            fontSize: 9,
-                            fontWeight: FontWeight.normal))
-                  ],
-                ),
-              ],
+            borderRadius: BorderRadius.circular(6.0)),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6.0),
+              child: Image.network(
+                imageUrl,
+                height: 70,
+                width: 70,
+              ),
             ),
-          ),
-          Container(
-            height: 15,
-            width: 15,
-            decoration: BoxDecoration(
-                color: activity ? Color(0xff41EAD4) : Color(0xffff8181),
-                borderRadius: BorderRadius.circular(120.0)),
-          ),
-        ],
+            Container(
+              height: 50,
+              width: MediaQuery.of(context).size.width * 0.4,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(getCapitalizeString(liquorName),
+                      style: TextStyle(
+                          color: Color(0xfff4f4f4),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(liquorQty + ' ml',
+                          style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal)),
+                      Text(liquorPrice + ' KES',
+                          style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal))
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: 15,
+              width: 15,
+              decoration: BoxDecoration(
+                  color: activity ? Color(0xff41EAD4) : Color(0xffff8181),
+                  borderRadius: BorderRadius.circular(120.0)),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-
 
 class AddLiquor extends StatefulWidget {
   @override
@@ -229,7 +243,7 @@ class AddLiquor extends StatefulWidget {
 }
 
 class _AddLiquorState extends State<AddLiquor> {
-  bool _isSwitched = false;
+  bool _isSwitched = true;
   final liquorNameController = TextEditingController();
   final liquorVolumeController = TextEditingController();
   final liquorPriceController = TextEditingController();
@@ -249,9 +263,16 @@ class _AddLiquorState extends State<AddLiquor> {
     });
   }
 
+  bool _isLoading = false;
   String _uploadedFileURL;
+  load() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
+  }
 
-  Future uploadEventImage() async {
+  Future uploadLiquorImage() async {
+    load();
     StorageReference storageReference =
         FirebaseStorage.instance.ref().child('Liquor/${_image.path}}');
     StorageUploadTask uploadTask = storageReference.putFile(_image);
@@ -262,11 +283,11 @@ class _AddLiquorState extends State<AddLiquor> {
       setState(() {
         _uploadedFileURL = fileURL;
       });
-      addEventInfo();
+      addLiquorInfo();
     });
   }
 
-  void addEventInfo() async {
+  void addLiquorInfo() async {
     // use the name of the store to create the store. The store name should be unique
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -283,14 +304,18 @@ class _AddLiquorState extends State<AddLiquor> {
       'active': _isSwitched,
       'imageUrl': _uploadedFileURL
     }).then((value) {
-         Fluttertoast.showToast(
-            msg: "Successfully Added to Your Store",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Color(0xff16172a),
-            textColor: Color(0xfff4f4f4),
-            fontSize: 10.0);
+      Fluttertoast.showToast(
+          msg: "Successfully Added to Your Store",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xff16172a),
+          textColor: Color(0xfff4f4f4),
+          fontSize: 10.0);
+      load();
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false);
     });
   }
 
@@ -305,203 +330,270 @@ class _AddLiquorState extends State<AddLiquor> {
 
   Widget build(BuildContext context) {
     // check if the information was passed here, and if not show the default empty boxes
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppBar(
-                        centerTitle: true,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0.0,
-                        title: Text('Add Liquor',
-                            style: TextStyle(
-                                color: Color(0xffe1e1e1),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold))),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
+    return _isLoading
+        ? Scaffold(
+            backgroundColor: Color(0xff16172a),
+            body: Center(
+              child: SpinKitChasingDots(
+                color: Color(0xffff8181),
+                size: 30.0,
+                duration: Duration(milliseconds: 2000),
+              ),
+            ),
+          )
+        : Scaffold(
+            body: SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Container(
+                  height: MediaQuery.of(context).size.height,
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            height: 120,
-                            width: MediaQuery.of(context).size.width * 0.45,
-                            decoration: BoxDecoration(
-                              // color: Color(0xff37deed),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: _image == null
-                                ? Center(
-                                    child: Text('No image selected.',
-                                        style: TextStyle(
-                                            color: Color(0x5fe1e1e1),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.normal)))
-                                : Image.file(_image),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              getImage();
-                            },
-                            child: Container(
-                                height: 40,
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffff8181),
-                                  borderRadius: BorderRadius.circular(6),
+                          AppBar(
+                              centerTitle: true,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0.0,
+                              title: Text('Add Liquor',
+                                  style: TextStyle(
+                                      color: Color(0xffe1e1e1),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold))),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  height: 120,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.45,
+                                  decoration: BoxDecoration(
+                                    // color: Color(0xff37deed),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: _image == null
+                                      ? Center(
+                                          child: Text('No image selected.',
+                                              style: TextStyle(
+                                                  color: Color(0x5fe1e1e1),
+                                                  fontSize: 11,
+                                                  fontWeight:
+                                                      FontWeight.normal)))
+                                      : Image.file(_image),
                                 ),
-                                child: Center(
-                                    child: Text('select photo',
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.normal)))),
+                                GestureDetector(
+                                  onTap: () {
+                                    getImage();
+                                  },
+                                  child: Container(
+                                      height: 40,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xffff8181),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Center(
+                                          child: Text('select photo',
+                                              style: TextStyle(
+                                                  color: Color(0xffe1e1e1),
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      FontWeight.normal)))),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                            padding: EdgeInsets.only(left: 20, right: 20),
-                            width: MediaQuery.of(context).size.width * .45,
-                            child: Text(
-                              "If this switch is turned off, the Liquor won't be visible to customers viewing your store",
-                              style: TextStyle(
-                                  color: Color(0x5fe1e1e1), fontSize: 11),
-                            )),
-                        Switch(
-                          value: _isSwitched,
-                          onChanged: (value) {
-                            setState(() {
-                              _isSwitched = value;
-                            });
-                          },
-                          activeTrackColor: Colors.lightGreenAccent,
-                          activeColor: Colors.green,
-                          inactiveTrackColor: Colors.blueGrey[100],
-                          inactiveThumbColor: Colors.blueGrey[200],
-                        ),
-                      ],
-                    ),
-                    textinput(context, 'Name of Liquor', liquorNameController),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Column(
-                        children: [
                           Row(
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                margin: EdgeInsets.only(bottom: 6),
-                                height: 50,
-                                child: TextField(
-                                  controller: liquorVolumeController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'Volume in ml',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 11)),
-                                ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                height: 50,
-                                margin: EdgeInsets.only(bottom: 6),
-                                child: TextField(
-                                  controller: liquorPriceController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'Price in kes',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 11)),
-                                ),
+                                  padding: EdgeInsets.only(left: 20, right: 20),
+                                  width:
+                                      MediaQuery.of(context).size.width * .45,
+                                  child: Text(
+                                    "If this switch is turned off, the Liquor won't be visible to customers viewing your store",
+                                    style: TextStyle(
+                                        color: Color(0x5fe1e1e1), fontSize: 11),
+                                  )),
+                              Switch(
+                                value: _isSwitched,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isSwitched = value;
+                                  });
+                                },
+                                activeTrackColor: Colors.lightGreenAccent,
+                                activeColor: Colors.green,
+                                inactiveTrackColor: Colors.blueGrey[100],
+                                inactiveThumbColor: Colors.blueGrey[200],
                               ),
                             ],
                           ),
+                          textinput(
+                              context, 'Name of Liquor', liquorNameController),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      margin: EdgeInsets.only(bottom: 6),
+                                      height: 50,
+                                      child: TextField(
+                                        controller: liquorVolumeController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'Volume in ml',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      height: 50,
+                                      margin: EdgeInsets.only(bottom: 6),
+                                      child: TextField(
+                                        controller: liquorPriceController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'Price in kes',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                GestureDetector(
+                                    child: bottombtn(
+                                        Color(0xffff8181),
+                                        Color(0xffe1e1e1),
+                                        'Done',
+                                        MediaQuery.of(context).size.width * 0.5,
+                                        true,
+                                        false,
+                                        false),
+                                    onTap: () {
+                                      uploadLiquorImage();
+                                    })
+                              ])
                         ],
-                      ),
-                    ),
-                    Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          GestureDetector(
-                              child: bottombtn(
-                                  Color(0xffff8181),
-                                  Color(0xffe1e1e1),
-                                  'Done',
-                                  MediaQuery.of(context).size.width * 0.5,
-                                  true,
-                                  false,
-                                  false),
-                              onTap: () {
-                                uploadEventImage();
-                                Navigator.pop(context);
-                              })
-                        ])
-                  ],
-                )),
-          ),
-        ),
-      ),
-    );
+                      )),
+                ),
+              ),
+            ),
+          );
   }
 }
 
 class EditLiquor extends StatefulWidget {
+  final liquorId;
+  const EditLiquor({Key key, @required this.liquorId}) : super(key: key);
   @override
   _EditLiquorState createState() => _EditLiquorState();
 }
 
 class _EditLiquorState extends State<EditLiquor> {
-  bool _isSwitched = false;
+  bool _isSwitched = true;
   final liquorNameController = TextEditingController();
   final liquorVolumeController = TextEditingController();
   final liquorPriceController = TextEditingController();
 
   File _image;
   final picker = ImagePicker();
+  bool _isLoading = false;
+  String _uploadedFileURL;
+  var _liquorQty, _liquorPrice, _liquorName, _liquorImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLiquor();
+  }
+  // function to fetch details about the liquor
+
+  void _fetchLiquor() {
+    load();
+    FirebaseFirestore.instance
+        .collection('Liquor')
+        .where('docId', isEqualTo: widget.liquorId)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.docs.length > 0) {
+        setState(() {
+          _liquorImageUrl = value.docs[0].data()['imageUrl'];
+          _isSwitched = value.docs[0].data()['active'];
+          liquorVolumeController.text = value.docs[0].data()['liquorVolume'];
+          liquorPriceController.text = value.docs[0].data()['liquorPrice'];
+          liquorNameController.text = value.docs[0].data()['liquorName'];
+          _liquorQty = value.docs[0].data()['liquorVolume'];
+          _liquorPrice = value.docs[0].data()['liquorPrice'];
+          _liquorName = value.docs[0].data()['liquorName'];
+        });
+        load();
+      }
+    }).catchError((onError) {
+      load();
+    });
+  }
+
+  load() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
+  }
 
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
@@ -515,9 +607,8 @@ class _EditLiquorState extends State<EditLiquor> {
     });
   }
 
-  String _uploadedFileURL;
-
-  Future uploadEventImage() async {
+  Future uploadLiquorImage() async {
+    load();
     StorageReference storageReference =
         FirebaseStorage.instance.ref().child('Liquor/${_image.path}}');
     StorageUploadTask uploadTask = storageReference.putFile(_image);
@@ -528,229 +619,249 @@ class _EditLiquorState extends State<EditLiquor> {
       setState(() {
         _uploadedFileURL = fileURL;
       });
-      addEventInfo();
+      addLiquorInfo();
     });
   }
 
-  void addEventInfo() async {
-    // use the name of the store to create the store. The store name should be unique
-    FirebaseAuth auth = FirebaseAuth.instance;
-
-    final User user = auth.currentUser;
-    final uid = user.uid;
+  void addLiquorInfo() async {
     final databaseReference = FirebaseFirestore.instance;
-    final documentId = generateRandomString(10);
-    await databaseReference.collection("Liquor").doc(documentId).set({
-      'storeId': uid,
-      'docId': documentId,
-      'liquorName': liquorNameController.text,
-      'liquorVolume': liquorVolumeController.text,
-      'liquorPrice': liquorPriceController.text,
+    await databaseReference.collection("Liquor").doc(widget.liquorId).update({
+      'liquorName': liquorNameController.text != ''
+          ? liquorNameController.text
+          : _liquorName,
+      'liquorVolume': liquorVolumeController.text != ''
+          ? liquorVolumeController.text
+          : _liquorQty,
+      'liquorPrice': liquorPriceController.text != ''
+          ? liquorPriceController.text
+          : _liquorPrice,
       'active': _isSwitched,
-      'imageUrl': _uploadedFileURL
+      'imageUrl': _uploadedFileURL != null ? _uploadedFileURL : _liquorImageUrl
     }).then((value) {
-         Fluttertoast.showToast(
-            msg: "Successfully Added to Your Store",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Color(0xff16172a),
-            textColor: Color(0xfff4f4f4),
-            fontSize: 10.0);
+      Fluttertoast.showToast(
+          msg: "Successfully Updated",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xff16172a),
+          textColor: Color(0xfff4f4f4),
+          fontSize: 10.0);
+      load();
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false);
+    }).catchError((onError) {
+      print('error updating data');
     });
   }
-
-// generate a random string to use as your document Id
-  static const _chars =
-      'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-  Random _rnd = Random();
-
-  String generateRandomString(int length) =>
-      String.fromCharCodes(Iterable.generate(
-          length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
 
   Widget build(BuildContext context) {
     // check if the information was passed here, and if not show the default empty boxes
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppBar(
-                        centerTitle: true,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0.0,
-                        title: Text('Edit Liquor',
-                            style: TextStyle(
-                                color: Color(0xffe1e1e1),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold))),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
+    return _isLoading
+        ? Scaffold(
+            backgroundColor: Color(0xff16172a),
+            body: Center(
+              child: SpinKitChasingDots(
+                color: Color(0xffff8181),
+                size: 30.0,
+                duration: Duration(milliseconds: 2000),
+              ),
+            ),
+          )
+        : Scaffold(
+            body: SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Container(
+                  height: MediaQuery.of(context).size.height,
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            height: 120,
-                            width: MediaQuery.of(context).size.width * 0.45,
-                            decoration: BoxDecoration(
-                              // color: Color(0xff37deed),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: _image == null
-                                ? Center(
-                                    child: Text('No image selected.',
-                                        style: TextStyle(
-                                            color: Color(0x5fe1e1e1),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.normal)))
-                                : Image.file(_image),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              getImage();
-                            },
-                            child: Container(
-                                height: 40,
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffff8181),
-                                  borderRadius: BorderRadius.circular(6),
+                          AppBar(
+                              centerTitle: true,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0.0,
+                              title: Text('Edit Liquor',
+                                  style: TextStyle(
+                                      color: Color(0xffe1e1e1),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold))),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  height: 120,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.45,
+                                  decoration: BoxDecoration(
+                                    // color: Color(0xff37deed),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: _image == null
+                                      ? _liquorImageUrl == null
+                                          ? Center(
+                                              child: Text('No image selected.',
+                                                  style: TextStyle(
+                                                      color: Color(0x5fe1e1e1),
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.normal)))
+                                          : Image.network(_liquorImageUrl)
+                                      : Image.file(_image),
                                 ),
-                                child: Center(
-                                    child: Text('select photo',
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.normal)))),
+                                GestureDetector(
+                                  onTap: () {
+                                    getImage();
+                                  },
+                                  child: Container(
+                                      height: 40,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xffff8181),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Center(
+                                          child: Text('select photo',
+                                              style: TextStyle(
+                                                  color: Color(0xffe1e1e1),
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      FontWeight.normal)))),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                            padding: EdgeInsets.only(left: 20, right: 20),
-                            width: MediaQuery.of(context).size.width * .45,
-                            child: Text(
-                              "If this switch is turned off, the Liquor won't be visible to customers viewing your store",
-                              style: TextStyle(
-                                  color: Color(0x5fe1e1e1), fontSize: 11),
-                            )),
-                        Switch(
-                          value: _isSwitched,
-                          onChanged: (value) {
-                            setState(() {
-                              _isSwitched = value;
-                            });
-                          },
-                          activeTrackColor: Colors.lightGreenAccent,
-                          activeColor: Colors.green,
-                          inactiveTrackColor: Colors.blueGrey[100],
-                          inactiveThumbColor: Colors.blueGrey[200],
-                        ),
-                      ],
-                    ),
-                    textinput(context, 'Name of Liquor', liquorNameController),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Column(
-                        children: [
                           Row(
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                margin: EdgeInsets.only(bottom: 6),
-                                height: 50,
-                                child: TextField(
-                                  controller: liquorVolumeController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'Volume in ml',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 11)),
-                                ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                height: 50,
-                                margin: EdgeInsets.only(bottom: 6),
-                                child: TextField(
-                                  controller: liquorPriceController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'Price in kes',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 11)),
-                                ),
+                                  padding: EdgeInsets.only(left: 20, right: 20),
+                                  width:
+                                      MediaQuery.of(context).size.width * .45,
+                                  child: Text(
+                                    "If this switch is turned off, the Liquor won't be visible to customers viewing your store",
+                                    style: TextStyle(
+                                        color: Color(0x5fe1e1e1), fontSize: 11),
+                                  )),
+                              Switch(
+                                value: _isSwitched,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isSwitched = value;
+                                  });
+                                },
+                                activeTrackColor: Colors.lightGreenAccent,
+                                activeColor: Colors.green,
+                                inactiveTrackColor: Colors.blueGrey[100],
+                                inactiveThumbColor: Colors.blueGrey[200],
                               ),
                             ],
                           ),
+                          textinput(
+                              context, 'Name of Liquor', liquorNameController),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      margin: EdgeInsets.only(bottom: 6),
+                                      height: 50,
+                                      child: TextField(
+                                        controller: liquorVolumeController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'Volume in ml',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      height: 50,
+                                      margin: EdgeInsets.only(bottom: 6),
+                                      child: TextField(
+                                        controller: liquorPriceController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'Price in kes',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                GestureDetector(
+                                    child: bottombtn(
+                                        Color(0xffff8181),
+                                        Color(0xffe1e1e1),
+                                        'Done',
+                                        MediaQuery.of(context).size.width * 0.5,
+                                        true,
+                                        false,
+                                        false),
+                                    onTap: () {
+                                      _image!=null?uploadLiquorImage():addLiquorInfo();
+                                    })
+                              ])
                         ],
-                      ),
-                    ),
-                    Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          GestureDetector(
-                              child: bottombtn(
-                                  Color(0xffff8181),
-                                  Color(0xffe1e1e1),
-                                  'Done',
-                                  MediaQuery.of(context).size.width * 0.5,
-                                  true,
-                                  false,
-                                  false),
-                              onTap: () {
-                                uploadEventImage();
-                                Navigator.pop(context);
-                              })
-                        ])
-                  ],
-                )),
-          ),
-        ),
-      ),
-    );
+                      )),
+                ),
+              ),
+            ),
+          );
   }
 }

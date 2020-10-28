@@ -35,6 +35,7 @@ class MapState extends State<Map> {
   final TextEditingController locationSearch = TextEditingController();
   bool _isSearch = false;
   bool searching = false;
+  bool _loader = false;
   @override
   void initState() {
     super.initState();
@@ -118,18 +119,40 @@ class MapState extends State<Map> {
 
     final User user = auth.currentUser;
     final uid = user.uid;
-    DocumentSnapshot document =
-        await FirebaseFirestore.instance.collection('Stores').doc(uid).get();
-    print(document.data()["location"]);
-    var lat = convertToDouble(document.data()['location'], 0);
-    var lng = convertToDouble(document.data()['location'], 1);
-    setState(() {
-      _initialPosition = LatLng(lat, lng);
-    });
-    if (_initialPosition == null) {
+    if (uid != null) {
+      FirebaseFirestore.instance
+          .collection('Stores')
+          .doc(uid)
+          .get()
+          .then((value) {
+        print(value.data()["location"]);
+        var lat = convertToDouble(value.data()['location'], 0);
+        var lng = convertToDouble(value.data()['location'], 1);
+        setState(() {
+          _initialPosition = LatLng(lat, lng);
+        });
+        print(_initialPosition);
+        if (_initialPosition == null) {
+          _getUserLocation();
+        }
+        var storeName = fetchStoreName();
+        _markers.clear();
+        _markers.add(Marker(
+            markerId: MarkerId("0"),
+            position: _initialPosition,
+            infoWindow: InfoWindow(
+                title: storeName == '' || storeName != null
+                    ? 'Your Store'
+                    : storeName,
+                snippet: 'This is the current location of your store')));
+        _currentLocation(_initialPosition);
+      }).catchError((onError) {
+        _getUserLocation();
+      });
+    } else {
+      print('location not found');
       _getUserLocation();
     }
-    _currentLocation(_initialPosition);
   }
 
   void setMapStyle() async {
@@ -195,6 +218,9 @@ class MapState extends State<Map> {
     await databaseReference.collection("Stores").doc(uid).set({
       'location': _initialPosition.toString(),
     }).then((value) {
+      setState(() {
+        _loader = false;
+      });
       Navigator.pop(context);
     });
   }
@@ -209,8 +235,6 @@ class MapState extends State<Map> {
       padding: const EdgeInsets.all(10.0),
     );
   }
-
- 
 
 // Google Api Key
   static const kGoogleApiKey = "AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns";
@@ -292,87 +316,10 @@ class MapState extends State<Map> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        backgroundColor: Color(0xff16172a),
-        appBar: AppBar(
-          // leading: new Container(),
-           leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Color(0xfff4f4f4)),
-    onPressed: () => Navigator.of(context).pop(),
-  ), 
-          centerTitle: true,
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: searching
-              ? TextField(
-                  controller: locationSearch,
-                  autofocus: true,
-                  cursorColor: Color(0xffff8181),
-                  // maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xfff4f4f4),
-                  ),
-                  textInputAction: TextInputAction.search,
-                  // buildCounter: (BuildContext context, { int currentLength, int maxLength, bool isFocused }) => null,thi
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Search Location',
-                      hintStyle:
-                          TextStyle(color: Color(0xffcccccc), fontSize: 14)),
-                  onSubmitted: (s) async {
-                    // populate the list
-                    fetchLocationJson();
-
-                    // if it prints something you want
-                    setState(() {
-                      _isSearch = true;
-                    });
-                  })
-              : Text('Select Location'),
-          actions: [
-            searching
-                ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        // clear text inside search
-                        _isSearch = false;
-                        searching = false;
-                        locationSearch.clear();
-                      });
-                    },
-                    child: Icon(
-                      Icons.close,
-                      color: Color(0xffff8181),
-                      size: 25.0,
-                      semanticLabel: 'close search',
-                    ),
-                  )
-                : GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        // clear text inside search
-                        _isSearch = false;
-                        searching = true;
-                        locationSearch.clear();
-                        print(searching);
-                      });
-                    },
-                    child: Icon(
-                      Icons.search,
-                      color: Color(0xfff4f4f4),
-                      size: 25.0,
-                      semanticLabel: 'open search',
-                    ),
-                  ),
-            SizedBox(width: 15),
-          ],
-          // backgroundColor: Colors.black26,
-          backgroundColor: Color(0xff16172a),
-          elevation: 0.0,
-        ),
-        body: _initialPosition == null
-            ? Container(
+      home: _loader
+          ? Scaffold(
+            backgroundColor: Color(0xff16172a),
+              body: Container(
                 child: Center(
                   child: SpinKitChasingDots(
                     color: Color(0xffff8181),
@@ -380,214 +327,315 @@ class MapState extends State<Map> {
                     duration: Duration(milliseconds: 2000),
                   ),
                 ),
-              )
-            : Container(
-                child: Stack(children: <Widget>[
-                  GoogleMap(
-                    markers: _markers,
-                    mapType: _currentMapType,
-                    initialCameraPosition: CameraPosition(
-                      target: _initialPosition,
-                      zoom: 14.4746,
-                    ),
-                    onMapCreated: _onMapCreated,
-                    zoomGesturesEnabled: true,
-                    zoomControlsEnabled: false,
-                    onCameraMove: _onCameraMove,
-                    myLocationEnabled: true,
-                    compassEnabled: false,
-                    myLocationButtonEnabled: false,
-                  ),
-                  Center(
-                    child: Icon(
-                      Icons.location_searching,
-                      size: 45,
-                      color: Color(0xffff8181),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            moveMarkerToMyLocation();
-                          },
-                          child: Container(
-                            height: 45,
-                            width: 45,
-                            margin:
-                                EdgeInsets.only(top: 10, right: 10, bottom: 10),
-                            decoration: BoxDecoration(
-                              color: Color(0xff16172a),
-                              border: Border.all(
-                                color: Color(0xffff8181),
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.my_location,
-                              size: 23,
-                              color: Color(0xffff8181),
-                            ),
-                          ),
+              ),
+            )
+          : Scaffold(
+              backgroundColor: Color(0xff16172a),
+              appBar: AppBar(
+                // leading: new Container(),
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back, color: Color(0xfff4f4f4)),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                centerTitle: true,
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: searching
+                    ? TextField(
+                        controller: locationSearch,
+                        autofocus: true,
+                        cursorColor: Color(0xffff8181),
+                        // maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xfff4f4f4),
                         ),
-                        GestureDetector(
+                        textInputAction: TextInputAction.search,
+                        // buildCounter: (BuildContext context, { int currentLength, int maxLength, bool isFocused }) => null,thi
+                        decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Search Location',
+                            hintStyle: TextStyle(
+                                color: Color(0xffcccccc), fontSize: 14)),
+                        onSubmitted: (s) async {
+                          // populate the list
+                          fetchLocationJson();
+
+                          // if it prints something you want
+                          setState(() {
+                            _isSearch = true;
+                          });
+                        })
+                    : Text('Select Location'),
+                actions: [
+                  searching
+                      ? GestureDetector(
                           onTap: () {
-                            _onMapTypeButtonPressed();
+                            setState(() {
+                              // clear text inside search
+                              _isSearch = false;
+                              searching = false;
+                              locationSearch.clear();
+                            });
                           },
-                          child: Container(
-                            height: 45,
-                            width: 45,
-                            margin:
-                                EdgeInsets.only(top: 10, right: 10, bottom: 10),
-                            decoration: BoxDecoration(
-                              color: Color(0xff16172a),
-                              border: Border.all(
-                                color: Color(0xffff8181),
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.map,
-                              size: 23,
-                              color: Color(0xffff8181),
-                            ),
-                          ),
-                        ),
-                        _markers.length == 0
-                            ? GestureDetector(
-                                onTap: () {
-                                  _onAddMarkerButtonPressed();
-                                },
-                                child: Container(
-                                  height: 45,
-                                  width: 45,
-                                  margin: EdgeInsets.only(top: 10, right: 10),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xff16172a),
-                                    border: Border.all(
-                                      color: Color(0xffff8181),
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    Icons.location_on,
-                                    size: 23,
-                                    color: Color(0xffff8181),
-                                  ),
-                                ),
-                              )
-                            : GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _markers.clear();
-                                  });
-                                },
-                                child: Container(
-                                  height: 45,
-                                  width: 45,
-                                  margin: EdgeInsets.only(top: 10, right: 10),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xff16172a),
-                                    border: Border.all(
-                                      color: Color(0xffff8181),
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    Icons.location_off,
-                                    size: 23,
-                                    color: Color(0xffff8181),
-                                  ),
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
-                  _isSearch
-                      ? Align(
-                          alignment: Alignment.topCenter,
-                          child: new ListView.builder(
-                            itemCount: location == null ? 0 : location.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  moveMapCamera(location[index]['geometry']);
-                                },
-                                child: new Card(
-                                  color: Color(0xff16172a),
-                                  elevation: 1.0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Center(
-                                        child: Column(
-                                      children: [
-                                        Container(
-                                            margin: EdgeInsets.only(
-                                                top: 10, bottom: 7.5),
-                                            child: new Text(
-                                                location[index]
-                                                    ["formatted_address"],
-                                                style: TextStyle(
-                                                    color: Color(0xffcccccc),
-                                                    fontSize: 14))),
-                                        Container(
-                                            margin: EdgeInsets.only(
-                                                top: 7.5, bottom: 10),
-                                            child: fetchLatLong(
-                                                location[index]['geometry'])),
-                                      ],
-                                    )),
-                                  ),
-                                ),
-                              );
-                            },
+                          child: Icon(
+                            Icons.close,
+                            color: Color(0xffff8181),
+                            size: 25.0,
+                            semanticLabel: 'close search',
                           ),
                         )
-                      : Container(),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: _markers.length == 0
-                        ? GestureDetector(
-                            onTap: () {
-                              // upload either the location selected or current location to firebase
-                              print(_markers.length);
-                              // addStoreLocation();
-                              // navigator pop
-                              // Navigator.pop(context);
-                              _onAddMarkerButtonPressed();
-                            },
-                            child: bottombtn(
-                                Color(0xffff8181),
-                                Color(0xffe1e1e1),
-                                'Select',
-                                MediaQuery.of(context).size.width * 0.5,
-                                true,
-                                false,
-                                false),
-                          )
-                        : GestureDetector(
-                            onTap: () {
-                              // upload either the location selected or current location to firebase
-                              print(_markers.length);
-
-                              addStoreLocation();
-                              // navigator pop
-                            },
-                            child: bottombtn(
-                                Color(0xffff8181),
-                                Color(0xffe1e1e1),
-                                'Done',
-                                MediaQuery.of(context).size.width * 0.5,
-                                true,
-                                false,
-                                false),
+                      : GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              // clear text inside search
+                              _isSearch = false;
+                              searching = true;
+                              locationSearch.clear();
+                              print(searching);
+                            });
+                          },
+                          child: Icon(
+                            Icons.search,
+                            color: Color(0xfff4f4f4),
+                            size: 25.0,
+                            semanticLabel: 'open search',
                           ),
-                  ),
-                ]),
+                        ),
+                  SizedBox(width: 15),
+                ],
+                // backgroundColor: Colors.black26,
+                backgroundColor: Color(0xff16172a),
+                elevation: 0.0,
               ),
-      ),
+              body: _initialPosition == null
+                  ? Container(
+                      child: Center(
+                        child: SpinKitChasingDots(
+                          color: Color(0xffff8181),
+                          size: 50.0,
+                          duration: Duration(milliseconds: 2000),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      child: Stack(children: <Widget>[
+                        GoogleMap(
+                          markers: _markers,
+                          mapType: _currentMapType,
+                          initialCameraPosition: CameraPosition(
+                            target: _initialPosition,
+                            zoom: 14.4746,
+                          ),
+                          onMapCreated: _onMapCreated,
+                          zoomGesturesEnabled: true,
+                          zoomControlsEnabled: false,
+                          onCameraMove: _onCameraMove,
+                          myLocationEnabled: true,
+                          compassEnabled: false,
+                          myLocationButtonEnabled: false,
+                        ),
+                        Center(
+                          child: Icon(
+                            Icons.location_searching,
+                            size: 45,
+                            color: Color(0xffff8181),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  moveMarkerToMyLocation();
+                                },
+                                child: Container(
+                                  height: 45,
+                                  width: 45,
+                                  margin: EdgeInsets.only(
+                                      top: 10, right: 10, bottom: 10),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff16172a),
+                                    border: Border.all(
+                                      color: Color(0xffff8181),
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    Icons.my_location,
+                                    size: 23,
+                                    color: Color(0xffff8181),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  _onMapTypeButtonPressed();
+                                },
+                                child: Container(
+                                  height: 45,
+                                  width: 45,
+                                  margin: EdgeInsets.only(
+                                      top: 10, right: 10, bottom: 10),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff16172a),
+                                    border: Border.all(
+                                      color: Color(0xffff8181),
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    Icons.map,
+                                    size: 23,
+                                    color: Color(0xffff8181),
+                                  ),
+                                ),
+                              ),
+                              _markers.length == 0
+                                  ? GestureDetector(
+                                      onTap: () {
+                                        _onAddMarkerButtonPressed();
+                                      },
+                                      child: Container(
+                                        height: 45,
+                                        width: 45,
+                                        margin:
+                                            EdgeInsets.only(top: 10, right: 10),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xff16172a),
+                                          border: Border.all(
+                                            color: Color(0xffff8181),
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Icon(
+                                          Icons.location_on,
+                                          size: 23,
+                                          color: Color(0xffff8181),
+                                        ),
+                                      ),
+                                    )
+                                  : GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _markers.clear();
+                                        });
+                                      },
+                                      child: Container(
+                                        height: 45,
+                                        width: 45,
+                                        margin:
+                                            EdgeInsets.only(top: 10, right: 10),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xff16172a),
+                                          border: Border.all(
+                                            color: Color(0xffff8181),
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Icon(
+                                          Icons.location_off,
+                                          size: 23,
+                                          color: Color(0xffff8181),
+                                        ),
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                        _isSearch
+                            ? Align(
+                                alignment: Alignment.topCenter,
+                                child: new ListView.builder(
+                                  itemCount:
+                                      location == null ? 0 : location.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        moveMapCamera(
+                                            location[index]['geometry']);
+                                      },
+                                      child: new Card(
+                                        color: Color(0xff16172a),
+                                        elevation: 1.0,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: Center(
+                                              child: Column(
+                                            children: [
+                                              Container(
+                                                  margin: EdgeInsets.only(
+                                                      top: 10, bottom: 7.5),
+                                                  child: new Text(
+                                                      location[index]
+                                                          ["formatted_address"],
+                                                      style: TextStyle(
+                                                          color:
+                                                              Color(0xffcccccc),
+                                                          fontSize: 14))),
+                                              Container(
+                                                  margin: EdgeInsets.only(
+                                                      top: 7.5, bottom: 10),
+                                                  child: fetchLatLong(
+                                                      location[index]
+                                                          ['geometry'])),
+                                            ],
+                                          )),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Container(),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: _markers.length == 0
+                              ? GestureDetector(
+                                  onTap: () {
+                                    // upload either the location selected or current location to firebase
+                                    print(_markers.length);
+                                    // addStoreLocation();
+                                    // navigator pop
+                                    // Navigator.pop(context);
+                                    _onAddMarkerButtonPressed();
+                                  },
+                                  child: bottombtn(
+                                      Color(0xffff8181),
+                                      Color(0xffe1e1e1),
+                                      'Select',
+                                      MediaQuery.of(context).size.width * 0.5,
+                                      true,
+                                      false,
+                                      false),
+                                )
+                              : GestureDetector(
+                                  onTap: () {
+                                    // upload either the location selected or current location to firebase
+                                    print(_markers.length);
+                                     setState(() {
+                                        _loader = true;
+                                      });
+                                    addStoreLocation();
+                                    // navigator pop
+                                  },
+                                  child: bottombtn(
+                                      Color(0xffff8181),
+                                      Color(0xffe1e1e1),
+                                      'Done',
+                                      MediaQuery.of(context).size.width * 0.5,
+                                      true,
+                                      false,
+                                      false),
+                                ),
+                        ),
+                      ]),
+                    ),
+            ),
     );
   }
 }
@@ -784,8 +832,6 @@ class UpdateMapState extends State<UpdateMap> {
     );
   }
 
- 
-
 // Google Api Key
   static const kGoogleApiKey = "AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns";
 // https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=NameOfPlace&inputtype=textquery&fields=place_id,name&key=YOUR_API_KEY
@@ -870,10 +916,10 @@ class UpdateMapState extends State<UpdateMap> {
         backgroundColor: Color(0xff16172a),
         appBar: AppBar(
           // leading: new Container(),
-           leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Color(0xfff4f4f4)),
-    onPressed: () => Navigator.of(context).pop(),
-  ), 
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Color(0xfff4f4f4)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           centerTitle: true,
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.

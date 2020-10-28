@@ -32,6 +32,7 @@ class _MyStoreState extends State<MyStore> {
   String contactName;
   String emailAddress;
   String password;
+  bool _isLoading = false;
   // for the maps functionality
   GoogleMapController controller1;
 
@@ -41,6 +42,12 @@ class _MyStoreState extends State<MyStore> {
   void initState() {
     super.initState();
     getStoreLatLng();
+  }
+
+  load() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
   }
 
   _onMapCreated(GoogleMapController controller) {
@@ -60,11 +67,10 @@ class _MyStoreState extends State<MyStore> {
       _markers.add(Marker(
           markerId: MarkerId("0"),
           position: _initialPosition,
-          infoWindow:
-              InfoWindow(title: fetchStoreName().toString(), snippet: fetchStoreName().toString())
-              ));
+          infoWindow: InfoWindow(
+              title: fetchStoreName().toString(),
+              snippet: fetchStoreName().toString())));
     });
-   
   }
 
   void setMapStyle() async {
@@ -208,20 +214,39 @@ class _MyStoreState extends State<MyStore> {
   }
 
   getStoreLatLng() async {
+    load();
     FirebaseAuth auth = FirebaseAuth.instance;
 
     final User user = auth.currentUser;
     final uid = user.uid;
-    DocumentSnapshot document =
-        await FirebaseFirestore.instance.collection('Stores').doc(uid).get();
-    print(document.data()["location"]);
-    var lat = convertToDouble(document.data()['location'], 0);
-    var lng = convertToDouble(document.data()['location'], 1);
-    setState(() {
-      _initialPosition = LatLng(lat, lng);
-    });
-    
-    _currentLocation(_initialPosition);
+    if (uid != null) {
+      FirebaseFirestore.instance
+          .collection('Stores')
+          .doc(uid)
+          .get()
+          .then((value) {
+        print(value.data()["location"]);
+        var lat = convertToDouble(value.data()['location'], 0);
+        var lng = convertToDouble(value.data()['location'], 1);
+        setState(() {
+          _initialPosition = LatLng(lat, lng);
+          var storeName = '';
+          _markers.clear();
+          _markers.add(Marker(
+              markerId: MarkerId("0"),
+              position: _initialPosition,
+              infoWindow: InfoWindow(
+                  title: storeName == '' ? 'Your Store' : storeName,
+                  snippet: 'This is the current location of your store')));
+        });
+        _currentLocation(_initialPosition);
+        print(_initialPosition);
+      }).catchError((onError) {
+        print(onError);
+      });
+    } else {
+      print('location not found');
+    }
   }
 
   fetchStoreName() async {
@@ -237,80 +262,20 @@ class _MyStoreState extends State<MyStore> {
   void _currentLocation(loc) async {
     final GoogleMapController controller = controller1;
 
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        bearing: 0,
-        target: loc,
-        zoom: 15.0,
-      ),
-    ));
+    try {
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+          bearing: 0,
+          target: loc,
+          zoom: 15.0,
+        ),
+      ));
+    } catch (e) {
+      // no such method error occurred
+      print(e);
+    }
+    load();
   }
-  // getStoreLocation() {
-  //   FirebaseAuth auth = FirebaseAuth.instance;
-
-  //   final User user = auth.currentUser;
-  //   final uid = user.uid;
-
-  //   return uid != null
-  //       ? new StreamBuilder(
-  //           stream: FirebaseFirestore.instance
-  //               .collection('Stores')
-  //               .doc(uid)
-  //               .snapshots(),
-  //           builder: (context, snapshot) {
-  //             if (!snapshot.hasData) {
-  //               return Center(
-  //                 child: SpinKitChasingDots(
-  //                   color: Color(0xffff8181),
-  //                   size: 30.0,
-  //                   duration: Duration(milliseconds: 2000),
-  //                 ),
-  //               );
-  //             }
-  //             var userDocument = snapshot.data;
-
-  //             _initialPosition = LatLng(
-  //                 convertToDouble(userDocument['location'], 0),
-  //                 convertToDouble(userDocument['location'], 1));
-
-  //             // add marker
-  //             _markers.add(Marker(
-  //                 markerId: MarkerId("0"),
-  //                 position: _initialPosition,
-  //                 infoWindow: InfoWindow(title: userDocument['storeName'])));
-  //             return _initialPosition == null
-  //                 ? Container(
-  //                     child: Center(
-  //                       // INTRODUCE A LOADER HERE
-  //                       child: Center(
-  //                         child: SpinKitChasingDots(
-  //                           color: Color(0xffff8181),
-  //                           size: 50.0,
-  //                           duration: Duration(milliseconds: 2000),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   )
-  //                 : GoogleMap(
-  //                     markers: _markers,
-  //                     initialCameraPosition: CameraPosition(
-  //                       target: _initialPosition,
-  //                       zoom: 14.4746,
-  //                     ),
-  //                     onMapCreated: _onMapCreated,
-  //                     zoomGesturesEnabled: false,
-  //                     zoomControlsEnabled: false,
-  //                     myLocationEnabled: false,
-  //                     compassEnabled: false,
-  //                     myLocationButtonEnabled: false,
-  //                     onTap: (_) {
-  //                       getStoreLatLng();
-  //                     },
-  //                   );
-  //           })
-  //       : Center(child: new Text('No Location Could be loaded'));
-  // }
-
   editStoreLocation() {
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -352,7 +317,17 @@ class _MyStoreState extends State<MyStore> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return _isLoading?
+    Container(
+                child: Center(
+                  child: SpinKitChasingDots(
+                    color: Color(0xffff8181),
+                    size: 50.0,
+                    duration: Duration(milliseconds: 2000),
+                  ),
+                ),
+              )
+    :Container(
       padding: EdgeInsets.only(left: 10, right: 10),
       child: Column(children: [
         Row(
@@ -638,22 +613,26 @@ class _MyStoreState extends State<MyStore> {
         SizedBox(height: 15),
         GestureDetector(
           onTap: () async {
+            load();
             //Create an instance of the current user.
             FirebaseAuth auth = FirebaseAuth.instance;
 
             final User user = auth.currentUser;
-            await auth.signOut().then((value) {
-              Fluttertoast.showToast(
-                  msg: "Successfully Signed Out",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Color(0xff16172a),
-                  textColor: Color(0xfff4f4f4),
-                  fontSize: 10.0);
-              Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => LandingPage()),
-                  (Route<dynamic> route) => false);
+            await auth.signOut().then((value) async {
+              await deleteCredentials().then((value) {
+                Fluttertoast.showToast(
+                    msg: "Successfully Signed Out",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    timeInSecForIosWeb: 1,
+                    backgroundColor: Color(0xff16172a),
+                    textColor: Color(0xfff4f4f4),
+                    fontSize: 10.0);
+                load();
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => LandingPage()),
+                    (Route<dynamic> route) => false);
+              });
             });
           },
           child: borderbtn(

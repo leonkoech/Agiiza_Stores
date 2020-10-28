@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:agiiza_stores/routing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -475,6 +476,10 @@ class _OrderDetailsState extends State<OrderDetails> {
       myLocationEnabled: true,
       compassEnabled: false,
       myLocationButtonEnabled: false,
+      onTap:(_){
+          Navigator.push(context, MaterialPageRoute(builder: (context)=> OrderRoutingMap(orderLocation: LatLng(convertToDouble(_orderLocation, 0),
+            convertToDouble(_orderLocation, 1)),)));
+      }
     );
   }
 
