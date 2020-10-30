@@ -86,13 +86,27 @@ class _OrderTabState extends State<OrderTab> {
                 padding: EdgeInsets.only(left: 10, right: 10),
                 // child: OrderList(status: '0'),
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: //orders received and not processed yet
-                      FirebaseFirestore.instance
+                  stream: orderSelected == 0
+                      ? FirebaseFirestore.instance
                           .collection('Orders')
                           .where('storeId', isEqualTo: storeId)
-                          .where('status', isEqualTo: orderSelected)
-                          .orderBy('timeStamp', descending: false)
-                          .snapshots(),
+                          .where('statusCode', isEqualTo: 0)
+                          .orderBy('orderPlaced', descending: true)
+                          .snapshots()
+                      : orderSelected == 1
+                          ? FirebaseFirestore.instance
+                              .collection('Orders')
+                              .where('storeId', isEqualTo: storeId)
+                              .where('statusCode', isGreaterThanOrEqualTo: 1)
+                              .where('statusCode', isLessThanOrEqualTo: 2)
+                              .orderBy('orderPlaced', descending: true)
+                              .snapshots()
+                          : FirebaseFirestore.instance
+                              .collection('Orders')
+                              .where('storeId', isEqualTo: storeId)
+                              .where('statusCode', isGreaterThanOrEqualTo: 3)
+                              .orderBy('orderPlaced', descending: true)
+                              .snapshots(),
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasError)
@@ -118,7 +132,7 @@ class _OrderTabState extends State<OrderTab> {
                       default:
                         return Padding(
                           padding:
-                              const EdgeInsets.only(top: 68.0, bottom: 68.0),
+                              const EdgeInsets.only(top: 8.0, bottom: 68.0),
                           child: new ListView(
                             scrollDirection: Axis.vertical,
                             children: snapshot.data.docs
@@ -126,13 +140,18 @@ class _OrderTabState extends State<OrderTab> {
                               if (snapshot.data.docs != null) {
                                 return OrderCard(
                                   customerName: document.data()['contactName'],
-                                  dateTime: document.data()['timestamp'],
-                                  imageUrl: fetchImageUrl(
-                                      document.data()['liquorId']),
+                                  dateTime: document.data()['orderPlaced'],
+                                  liquorId: document.data()['liquorId'],
                                   orderId: document.data()['orderId'],
                                   statusCode: document.data()['statusCode'],
-                                  amountSpent: document.data()['totalAmount'],
-                                  orderedItems: document.data()['liquorId'],
+                                  amountSpent:
+                                      document.data()['totalAmount'].toString(),
+                                  orderedItems:
+                                      document.data()['totalQty'].toString(),
+                                  imageUrl: document.data()['imageUrl'],
+                                  liquorName: document.data()['liquorName'],
+                                  liquorVlm: document.data()['liquorQty'],
+                                  storeName: document.data()['storeName'],
                                 );
                               } else {
                                 return new Text('No Liquor To display');
@@ -156,36 +175,36 @@ class _OrderTabState extends State<OrderTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   orderSelected == 0
-                      ? orderBtn(context, 'Received', Color(0xffe6f1ff),
+                      ? orderBtn(context, 'Placed', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Received',
+                          child: orderBtnInactive(context, 'Placed',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(0);
-                            print('received');
+                            print('Placed');
                           },
                         ),
                   orderSelected == 1
-                      ? orderBtn(context, 'Processing', Color(0xffe6f1ff),
+                      ? orderBtn(context, 'Dispatched', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Processing',
+                          child: orderBtnInactive(context, 'Dispatched',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(1);
-                            print('Processing');
+                            print('Dipoatched');
                           },
                         ),
                   orderSelected == 2
-                      ? orderBtn(context, 'Completed', Color(0xffe6f1ff),
+                      ? orderBtn(context, 'Delivered', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Completed',
+                          child: orderBtnInactive(context, 'Delivered',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(2);
-                            print('Completed');
+                            print('Delivered');
                           },
                         ),
                 ],
@@ -233,178 +252,297 @@ orderBtnInactive(context, text, txtcolor, bgcolor) {
   );
 }
 
-class OrderCard extends StatelessWidget {
+class OrderCard extends StatefulWidget {
   final customerName,
       dateTime,
-      imageUrl,
+      liquorId,
       orderId,
       statusCode,
       amountSpent,
-      orderedItems;
-  const OrderCard({
-    Key key,
-    @required this.customerName,
-    @required this.dateTime,
-    @required this.imageUrl,
-    @required this.orderId,
-    @required this.statusCode,
-    @required this.amountSpent,
-    @required this.orderedItems,
-  }) : super(key: key);
+      storeName,
+      liquorName,
+      liquorVlm,
+      orderedItems,
+      imageUrl;
+  const OrderCard(
+      {Key key,
+      this.customerName,
+      this.dateTime,
+      this.liquorId,
+      this.orderId,
+      this.statusCode,
+      this.amountSpent,
+      this.orderedItems,
+      this.imageUrl,
+      this.liquorName,
+      this.liquorVlm,
+      this.storeName})
+      : super(key: key);
+  @override
+  _OrderCardState createState() => _OrderCardState();
+}
+
+class _OrderCardState extends State<OrderCard> {
+  var imageUrl, _orderDate, _orderTime;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchImageUrl();
+  }
+
+  fetchImageUrl() async {
+    await FirebaseFirestore.instance
+        .collection('Liquors')
+        .where('liquorId', isEqualTo: widget.liquorId)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.docs.length > 0) {
+        setState(() {
+          imageUrl = value.docs[0].data()['imageUrl'];
+          DateTime myDateTime = (widget.dateTime).toDate();
+          _orderDate = DateFormat.yMMMd().format(myDateTime).toString();
+          _orderTime = DateFormat.jm().format(myDateTime).toString();
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Color(0xfff4f4f4),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => OrderDetails(
+                      orderId: widget.orderId,
+                    )));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Color(0xfff4f4f4),
+          ),
+          borderRadius: BorderRadius.all(Radius.circular(6)),
+          // this color will be determined by an order's state.ie, processing, cancelled, completed, received
+          //  light red - #ffe6e6
+          // light blue - #e6f1ff
+          // light yellow - #fffde6
+          // light green - #e7ffe6
+          color: Colors.transparent,
         ),
-        borderRadius: BorderRadius.all(Radius.circular(6)),
-        // this color will be determined by an order's state.ie, processing, cancelled, completed, received
-        //  light red - #ffe6e6
-        // light blue - #e6f1ff
-        // light yellow - #fffde6
-        // light green - #e7ffe6
-        color: Colors.transparent,
-      ),
-      margin: EdgeInsets.only(top: 10, bottom: 10),
-      padding: EdgeInsets.all(15),
-      child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text(
-              orderId,
-              style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('12:33 am',
+        margin: EdgeInsets.only(top: 10, bottom: 10),
+        padding: EdgeInsets.all(15),
+        child: Column(children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text(
+                widget.orderId,
                 style: TextStyle(
-                  color: Color(0x3f16172a),
-                  fontSize: 12,
-                )),
-            Text('09/09/2020',
-                style: TextStyle(
-                  color: Color(0x3f16172a),
-                  fontSize: 12,
-                )),
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            ClipRRect(
+                    color: Color(0xfff4f4f4),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text(
+                  DateFormat.yMMMd()
+                      .format(
+                          DateTime.parse(widget.dateTime.toDate().toString()))
+                      .toString(),
+                  style: TextStyle(
+                    color: Color(0xfff4f4f4),
+                    fontSize: 12,
+                  )),
+              Text(
+                  DateFormat.jm()
+                      .format(
+                          DateTime.parse(widget.dateTime.toDate().toString()))
+                      .toString(),
+                  style: TextStyle(
+                    color: Color(0xfff4f4f4),
+                    fontSize: 12,
+                  )),
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              ClipRRect(
                 borderRadius: BorderRadius.circular(6.0),
-                child: Image.network(imageUrl, height: 40, width: 40)),
-            Flex(
-              direction: Axis.horizontal,
-              children: [
-                Column(
-                  children: [
-                    Text('Amount',
-                        style: TextStyle(
-                          color: Color(0x3f16172a),
-                          fontSize: 12,
-                        )),
-                    Text(amountSpent.toString() + 'KES',
-                        style: TextStyle(
-                          color: Color(0x3f16172a),
-                          fontSize: 12,
-                        ))
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text('Quantity',
-                        style: TextStyle(
-                          color: Color(0x3f16172a),
-                          fontSize: 12,
-                        )),
-                    Text(amountSpent.toString() + 'KES',
-                        style: TextStyle(
-                          color: Color(0x3f16172a),
-                          fontSize: 12,
-                        ))
-                  ],
-                )
-              ],
-            )
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Ordered Items',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-            Text('2',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Amount',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-            Text('2,400 KES',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Status',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-            Text('Received',
-                style: TextStyle(
-                  color: Color(0xff16172a),
-                  fontSize: 13,
-                )),
-          ],
-        ),
-      ]),
+                child: widget.imageUrl != null
+                    ? Image.network(widget.imageUrl,
+                        fit: BoxFit.cover, height: 120, width: 100)
+                    : Container(),
+              ),
+              Column(
+                // crossAxisAlignment: Cro,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Ordered Items',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(widget.orderedItems,
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Amount',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(widget.amountSpent + ' Kes',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Store Name',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(widget.storeName,
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Liquor Name',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(widget.liquorName,
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Quantity',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(widget.liquorVlm.toString() + ' ml',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.60,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Status',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                        Text(
+                            widget.statusCode == 0
+                                ? 'Order Placed'
+                                : widget.statusCode == 1
+                                    ? 'Processing'
+                                    : widget.statusCode == 2
+                                        ? 'Dispatched'
+                                        : widget.statusCode == 3
+                                            ? 'Delivered'
+                                            : widget.statusCode == 4
+                                                ? 'Cancelled by Customer'
+                                                : 'Cancelled by Store',
+                            style: TextStyle(
+                              color: Color(0xfff4f4f4),
+                              fontSize: 13,
+                            )),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                ],
+              )
+            ],
+          ),
+        ]),
+      ),
     );
   }
 }
@@ -449,8 +587,8 @@ class _OrderDetailsState extends State<OrderDetails> {
           position: LatLng(convertToDouble(_orderLocation, 0),
               convertToDouble(_orderLocation, 1)),
           infoWindow: InfoWindow(
-              title: 'Your Store',
-              snippet: 'This is the Selected Store Location')));
+              title: 'Delivery Location',
+              snippet: 'This is the Selected Delivery Location')));
     });
     _setMapStyle();
   }
@@ -463,24 +601,21 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   _orderMap() {
     return GoogleMap(
-      markers: _markers,
-      initialCameraPosition: CameraPosition(
-        target: LatLng(convertToDouble(_orderLocation, 0),
-            convertToDouble(_orderLocation, 1)),
-        zoom: 14.4746,
-      ),
-      onMapCreated: _onMapCreated,
-      zoomGesturesEnabled: true,
-      zoomControlsEnabled: false,
-      // onCameraMove: _onCameraMove,
-      myLocationEnabled: true,
-      compassEnabled: false,
-      myLocationButtonEnabled: false,
-      onTap:(_){
-          Navigator.push(context, MaterialPageRoute(builder: (context)=> OrderRoutingMap(orderLocation: LatLng(convertToDouble(_orderLocation, 0),
-            convertToDouble(_orderLocation, 1)),)));
-      }
-    );
+        markers: _markers,
+        initialCameraPosition: CameraPosition(
+          target: LatLng(convertToDouble(_orderLocation, 0),
+              convertToDouble(_orderLocation, 1)),
+          zoom: 14.4746,
+        ),
+        onMapCreated: _onMapCreated,
+        zoomGesturesEnabled: true,
+        zoomControlsEnabled: false,
+        // onCameraMove: _onCameraMove,
+        myLocationEnabled: true,
+        compassEnabled: false,
+        myLocationButtonEnabled: false,
+        onTap: (_) {
+         });
   }
 
   convertToDouble(lat, step) {
@@ -506,27 +641,32 @@ class _OrderDetailsState extends State<OrderDetails> {
           _customerName = value.docs[0].data()['contactName'];
           _customerPhone = value.docs[0].data()['phoneNumber'];
           _orderLocation = value.docs[0].data()['location'];
-          _timeStamp = value.docs[0].data()['timeStamp'];
+          _timeStamp = value.docs[0].data()['orderPlaced'];
           _liquorId = value.docs[0].data()['liquorId'];
           _liquorQty = value.docs[0].data()['totalQty'];
           _totalAmt = value.docs[0].data()['totalAmount'];
           _orderStatus = value.docs[0].data()['statusCode'];
+           _imageUrl = value.docs[0].data()['imageUrl'];
+          _liquorName = value.docs[0].data()['liquorName'];
+          _liquorPrice = value.docs[0].data()['liquorPrice'];
+          _liquorVolume = value.docs[0].data()['liquorQty'];
+          _isLoading = false;
         });
-        
-        DateTime myDateTime = (_timeStamp).toDate();
-       _orderDate= DateFormat.yMMMd().format(myDateTime).toString();
-      _orderTime = DateFormat.jm().format(myDateTime).toString();
 
-        fetchLiquorDetails(_liquorId);
+        DateTime myDateTime = (_timeStamp).toDate();
+        _orderDate = DateFormat.yMMMd().format(myDateTime).toString();
+        _orderTime = DateFormat.jm().format(myDateTime).toString();
+
+        // fetchLiquorDetails();
       }
     });
   }
 
-  fetchLiquorDetails(liqId) {
+  fetchLiquorDetails() {
     _isLoading = true;
     FirebaseFirestore.instance
         .collection('Liquor')
-        .where('docId', isEqualTo: liqId)
+        .where('docId', isEqualTo: _liquorId)
         .limit(1)
         .get()
         .then((value) {
@@ -543,7 +683,17 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return _isLoading?
+        Scaffold(
+          body:Center(
+            child: SpinKitChasingDots(
+              color: Color(0xffff8181),
+              size: 50.0,
+              duration: Duration(milliseconds: 2000),
+            )
+          )
+        )
+        :Scaffold(
       appBar: AppBar(
         elevation: 0.0,
         backgroundColor: Colors.transparent,
@@ -562,16 +712,86 @@ class _OrderDetailsState extends State<OrderDetails> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text(_orderTime,
+                Text(
+                    DateFormat.yMMMd()
+                        .format(DateTime.parse(_timeStamp.toDate().toString()))
+                        .toString(),
                     style: TextStyle(
                       color: Color(0x4fe1e1e1),
                       fontSize: 15,
                     )),
-                Text(_orderDate,
+                Text(
+                    DateFormat.jm()
+                        .format(DateTime.parse(_timeStamp.toDate().toString()))
+                        .toString(),
                     style: TextStyle(
                       color: Color(0x4fe1e1e1),
                       fontSize: 15,
                     )),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(
+                  'Order Status',
+                  style: TextStyle(
+                      color: Color(0xffe1e1e1),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                )
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+
+                Text(
+                    _orderStatus == 0
+                        ? 'Order Placed'
+                        : _orderStatus == 1
+                            ? 'Processing'
+                            : _orderStatus == 2
+                                ? 'Dispatched'
+                                : _orderStatus == 3
+                                    ? 'Delivered'
+                                    : _orderStatus == 4
+                                        ? 'Cancelled by Customer'
+                                        : 'Cancelled by Store',
+                    style: TextStyle(
+                      color: Color(0xffe1e1e1),
+                      fontSize: 18,
+                    )),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return OrderStatusPopup(
+                              status: _orderStatus,
+                              orderId: widget.orderId,
+                              width: MediaQuery.of(context).size.width * 0.91);
+                        });
+                  },
+                  child: Container(
+                      decoration: BoxDecoration(
+                        color: Color(0xffff8181),
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
+                      width: MediaQuery.of(context).size.width * 0.3,
+                      height: 40,
+                      child: Center(
+                        child: Text('Change status',
+                            style: TextStyle(
+                              color: Color(0xffe1e1e1),
+                              fontSize: 13,
+                            )),
+                      )),
+                ),
               ],
             ),
             SizedBox(height: 20),
@@ -604,14 +824,15 @@ class _OrderDetailsState extends State<OrderDetails> {
                   },
                   child: Container(
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(6)),
-                          color: Color(0xffff8181)),
+                        border: Border.all(color: Color(0xffff8181)),
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
                       width: MediaQuery.of(context).size.width * 0.3,
                       height: 40,
                       child: Center(
                         child: Text('Contact',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xffff8181),
                               fontSize: 13,
                             )),
                       )),
@@ -645,7 +866,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text(_liquorQty,
+                Text(_liquorQty.toString(),
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -662,7 +883,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
                     )),
-                Text(_totalAmt,
+                Text(_totalAmt.toString() + ' KES',
                     style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 15,
@@ -675,7 +896,7 @@ class _OrderDetailsState extends State<OrderDetails> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
-                  'Items Ordered',
+                  'Liquor Ordered',
                   style: TextStyle(
                       color: Color(0xffe1e1e1),
                       fontSize: 18,
@@ -695,65 +916,11 @@ class _OrderDetailsState extends State<OrderDetails> {
                 ),
                 child: Column(
                   children: [
-                    orderListItem(context, _liquorName, _liquorQty,_liquorVolume, _liquorPrice),
+                    orderListItem(context, _liquorName, _liquorQty.toString(),
+                        _liquorVolume.toString(), _liquorPrice.toString(),),
                   ],
                 )),
             SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  'Order Status',
-                  style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                )
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text("Status",
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-                Text(_orderStatus==0?'Received':_orderStatus==1?'processing':_orderStatus==2?'completed':'cancelled',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return OrderStatusPopup(
-                              status: _orderStatus,
-                              width: MediaQuery.of(context).size.width * 0.91);
-                        });
-                  },
-                  child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(6)),
-                          color: Color(0xffff8181)),
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      height: 40,
-                      child: Center(
-                        child: Text('Change status',
-                            style: TextStyle(
-                              color: Color(0xffe1e1e1),
-                              fontSize: 13,
-                            )),
-                      )),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
@@ -768,16 +935,56 @@ class _OrderDetailsState extends State<OrderDetails> {
               ],
             ),
             SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(_customerName,
+                    style: TextStyle(
+                        color: Color(0xffe1e1e1),
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold)),
+                GestureDetector(
+                  onTap: () {
+                     Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => OrderRoutingMap(
+                              orderLocation: LatLng(
+                                  convertToDouble(_orderLocation, 0),
+                                  convertToDouble(_orderLocation, 1)),
+                      )));
+        
+
+                  },
+                  child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Color(0xffff8181)),
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
+                      width: MediaQuery.of(context).size.width * 0.3,
+                      height: 40,
+                      child: Center(
+                        child: Text('View Location',
+                            style: TextStyle(
+                              color: Color(0xffff8181),
+                              fontSize: 13,
+                            )),
+                      )),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
             Center(
               child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(6)),
-                    color: Color(0xffe1e1e1),
-                  ),
-                  height: 140,
-                  width: MediaQuery.of(context).size.width - 20,
-                  child: _orderMap(),
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                  color: Color(0xffe1e1e1),
+                ),
+                height: 140,
+                width: MediaQuery.of(context).size.width - 20,
+                child: _orderMap(),
+              ),
             ),
             SizedBox(height: 20),
           ],
@@ -787,7 +994,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   }
 }
 
-Widget orderListItem(context, liquorname, qty, litres,price) {
+Widget orderListItem(context, liquorname, qty, litres, price) {
   return Container(
     margin: EdgeInsets.only(top: 10, bottom: 10),
     child: Row(
@@ -817,7 +1024,7 @@ Widget orderListItem(context, liquorname, qty, litres,price) {
               color: Color(0xffe1e1e1),
               fontSize: 15,
             )),
-            Text(price + " KES",
+        Text(price + " KES",
             style: TextStyle(
               color: Color(0xffe1e1e1),
               fontSize: 15,
@@ -827,11 +1034,11 @@ Widget orderListItem(context, liquorname, qty, litres,price) {
   );
 }
 
-
 class OrderStatusPopup extends StatefulWidget {
   final int status;
   final double width;
-  const OrderStatusPopup({Key key, @required this.status, @required this.width})
+  final orderId;
+  const OrderStatusPopup({Key key, @required this.status, @required this.width,@required this.orderId})
       : super(key: key);
   @override
   _OrderStatusPopupState createState() => _OrderStatusPopupState();

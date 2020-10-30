@@ -166,16 +166,17 @@ class LiquorItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context)=>
-        EditLiquor(liquorId: liquorId)));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditLiquor(liquorId: liquorId)));
       },
       child: Container(
         width: MediaQuery.of(context).size.width - 40,
         margin: EdgeInsets.all(10),
-        
         padding: EdgeInsets.only(top: 8, bottom: 8, right: 15, left: 15),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+            color: Colors.transparent,
             border: Border.all(
               color: Color(0xfff4f4f4),
             ),
@@ -455,6 +456,7 @@ class _AddLiquorState extends State<AddLiquor> {
                                       height: 50,
                                       child: TextField(
                                         controller: liquorVolumeController,
+                                        keyboardType: TextInputType.number,
                                         style: TextStyle(
                                             color: Color(0xffe1e1e1),
                                             fontSize: 13),
@@ -484,6 +486,7 @@ class _AddLiquorState extends State<AddLiquor> {
                                       margin: EdgeInsets.only(bottom: 6),
                                       child: TextField(
                                         controller: liquorPriceController,
+                                        keyboardType: TextInputType.number,
                                         style: TextStyle(
                                             color: Color(0xffe1e1e1),
                                             fontSize: 13),
@@ -854,7 +857,9 @@ class _EditLiquorState extends State<EditLiquor> {
                                         false,
                                         false),
                                     onTap: () {
-                                      _image!=null?uploadLiquorImage():addLiquorInfo();
+                                      _image != null
+                                          ? uploadLiquorImage()
+                                          : addLiquorInfo();
                                     })
                               ])
                         ],

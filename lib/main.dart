@@ -236,13 +236,13 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
 
+  final emailLoginController = TextEditingController();
+  final passwordLoginController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     double c_width = MediaQuery.of(context).size.width * 0.7;
     double halfwidth = MediaQuery.of(context).size.width * 0.5;
     double childscrollviewheight = MediaQuery.of(context).size.height;
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
 
     load() {
       setState(() {
@@ -253,11 +253,12 @@ class _LoginPageState extends State<LoginPage> {
     loginUser() async {
       load();
       try {
-        if (emailController.text != '' && passwordController.text != '')
+        if (emailLoginController.text != '' &&
+            passwordLoginController.text != '') {
           await FirebaseAuth.instance
               .signInWithEmailAndPassword(
-                  email: emailController.text,
-                  password: passwordController.text)
+                  email: emailLoginController.text,
+                  password: passwordLoginController.text)
               .then((value) {
             setState(() {
               _isLoading = false;
@@ -286,6 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                 textColor: Color(0xfff4f4f4),
                 fontSize: 10.0);
           });
+        }
       } catch (e) {
         var message;
         if (Platform.isAndroid) {
@@ -352,9 +354,53 @@ class _LoginPageState extends State<LoginPage> {
                           TextStyle(fontSize: 18, color: Color(0x4fe1e1e1)))),
               // text entry box for email
               SizedBox(height: 15),
-              textinput(context, 'Email', emailController),
+              Container(
+                width: MediaQuery.of(context).size.width - 40,
+                height: 50,
+                margin: EdgeInsets.only(top: 7, bottom: 6),
+                child: TextField(
+                  controller: emailLoginController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(color: Color(0xffe1e1e1), fontSize: 13),
+                  decoration: InputDecoration(
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xffff8181), width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xffe1e1e1), width: 1.0),
+                      ),
+                      hintText: 'Email',
+                      hintStyle:
+                          TextStyle(color: Color(0xffe1e1e1), fontSize: 11)),
+                ),
+              ),
               SizedBox(height: 15),
-              passwordInput(context, 'Password', passwordController),
+              Container(
+                width: MediaQuery.of(context).size.width - 40,
+                height: 50,
+                margin: EdgeInsets.only(top: 7, bottom: 6),
+                child: TextField(
+                  controller: passwordLoginController,
+                  obscureText: true,
+                  style: TextStyle(color: Color(0xffe1e1e1), fontSize: 13),
+                  decoration: InputDecoration(
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xffff8181), width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xffe1e1e1), width: 1.0),
+                      ),
+                      hintText: 'Password',
+                      hintStyle:
+                          TextStyle(color: Color(0xffe1e1e1), fontSize: 11)),
+                ),
+              ),
               SizedBox(height: 25),
               GestureDetector(
                   onTap: () {
@@ -630,21 +676,14 @@ class _SignUpState extends State<SignUp> {
   final lastNameController = TextEditingController();
   final phoneNumberController = TextEditingController();
   final locationController = TextEditingController();
-
-  // firebase stuff
-
-  FirebaseAuth auth = FirebaseAuth.instance;
-// auth.authStateChanges().listen((User user) {
-//     if (user == null) {
-//       print('User is currently signed out!');
-//     } else {
-//       print('User is signed in!');
-//     }
-//   });
-  // Initially password is obscure
   bool _obscureText = true;
   bool _isLoading = false;
   String _password;
+  int steps = 0;
+  // firebase stuff
+
+  FirebaseAuth auth = FirebaseAuth.instance;
+  // Initially password is obscure
 
   // Toggles the password show status
   @override
@@ -660,7 +699,6 @@ class _SignUpState extends State<SignUp> {
     });
   }
 
-  int steps = 0;
   void checkUser() {
     auth.authStateChanges().listen((User user) {
       if (user == null) {

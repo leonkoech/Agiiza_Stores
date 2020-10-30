@@ -112,7 +112,7 @@ class _CreateEventState extends State<CreateEvent> {
       'docId': doc_id,
     }).then((value) {
       load();
-        Navigator.pop(context);
+      Navigator.pop(context);
     });
   }
 
@@ -353,7 +353,6 @@ class _CreateEventState extends State<CreateEvent> {
 
                                       // print(_uploadedFileURL);
                                       // show a toast that says 'event has been uploaded'
-                                    
                                     })
                               ])
                         ],
@@ -470,156 +469,94 @@ class _EditEventState extends State<EditEvent> {
       'timeStamp': Timestamp.now(),
     }).then((value) {
       _load();
-            Fluttertoast.showToast(
-                msg: "Event Successfully Updated",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Color(0xff16172a),
-                textColor: Color(0xfff4f4f4),
-                fontSize: 10.0);
+      Fluttertoast.showToast(
+          msg: "Event Successfully Updated",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xff16172a),
+          textColor: Color(0xfff4f4f4),
+          fontSize: 10.0);
 
-                                // show a toast that says 'event has been uploaded'
-                                Navigator.pop(context);
+      // show a toast that says 'event has been uploaded'
+      Navigator.pop(context);
     });
   }
 
   Widget build(BuildContext context) {
     // check if the information was passed here, and if not show the default empty boxes
     return Scaffold(
-      body: _isLoading? 
-      Container(
-                child: Center(
-                  child: SpinKitChasingDots(
-                    color: Color(0xffff8181),
-                    size: 50.0,
-                    duration: Duration(milliseconds: 2000),
-                  ),
+      body: _isLoading
+          ? Container(
+              child: Center(
+                child: SpinKitChasingDots(
+                  color: Color(0xffff8181),
+                  size: 50.0,
+                  duration: Duration(milliseconds: 2000),
                 ),
-              )
-      :SingleChildScrollView(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppBar(
-                        centerTitle: true,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0.0,
-                        title: Text('Edit Event',
-                            style: TextStyle(
-                                color: Color(0xffe1e1e1),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold))),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
+              ),
+            )
+          : SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Container(
+                  height: MediaQuery.of(context).size.height,
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                              height: 120,
-                              width: MediaQuery.of(context).size.width * 0.45,
-                              decoration: BoxDecoration(
-                                // color: Color(0xff37deed),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: _image != null
-                                  ? Image.file(_image)
-                                  : widget.imageUrl == null
-                                      ? Center(child: Text('No Image Selected'))
-                                      : Image.network(widget.imageUrl)),
-                          GestureDetector(
-                            onTap: () {
-                              getImage();
-                            },
-                            child: Container(
-                                height: 40,
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffff8181),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Center(
-                                    child: Text('select photo',
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.normal)))),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                            padding: EdgeInsets.only(left: 20, right: 20),
-                            width: MediaQuery.of(context).size.width * .45,
-                            child: Text(
-                              "If this switch is turned off, the event won't show on customer's event tab",
-                              style: TextStyle(
-                                  color: Color(0x5fe1e1e1), fontSize: 11),
-                            )),
-                        Switch(
-                          value: _isSwitched,
-                          onChanged: (value) {
-                            setState(() {
-                              _isSwitched = value;
-                            });
-                          },
-                          activeTrackColor: Colors.lightGreenAccent,
-                          activeColor: Colors.green,
-                          inactiveTrackColor: Colors.blueGrey[100],
-                          inactiveThumbColor: Colors.blueGrey[200],
-                        ),
-                      ],
-                    ),
-                    textinput(context, 'Title', titleController),
-                    Container(
-                      width: MediaQuery.of(context).size.width - 40,
-                      child: TextField(
-                        controller: descriptionController,
-                        maxLines: 6,
-                        style:
-                            TextStyle(color: Color(0xffe1e1e1), fontSize: 13),
-                        decoration: InputDecoration(
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color(0xffff8181), width: 1.0),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color(0xffe1e1e1), width: 1.0),
-                            ),
-                            hintText: 'Description',
-                            hintStyle: TextStyle(
-                                color: Color(0xffe1e1e1), fontSize: 13)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Column(
-                        children: [
+                          AppBar(
+                              centerTitle: true,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0.0,
+                              title: Text('Edit Event',
+                                  style: TextStyle(
+                                      color: Color(0xffe1e1e1),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold))),
                           Padding(
                             padding:
-                                const EdgeInsets.only(top: 5.0, bottom: 5.0),
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
                             child: Row(
                               mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Select dates',
-                                    style: TextStyle(
-                                        color: Color(0xffe1e1e1),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.normal)),
+                                Container(
+                                    height: 120,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.45,
+                                    decoration: BoxDecoration(
+                                      // color: Color(0xff37deed),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: _image != null
+                                        ? Image.file(_image)
+                                        : widget.imageUrl == null
+                                            ? Center(
+                                                child:
+                                                    Text('No Image Selected'))
+                                            : Image.network(widget.imageUrl)),
+                                GestureDetector(
+                                  onTap: () {
+                                    getImage();
+                                  },
+                                  child: Container(
+                                      height: 40,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xffff8181),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Center(
+                                          child: Text('select photo',
+                                              style: TextStyle(
+                                                  color: Color(0xffe1e1e1),
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      FontWeight.normal)))),
+                                ),
                               ],
                             ),
                           ),
@@ -628,92 +565,169 @@ class _EditEventState extends State<EditEvent> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                margin: EdgeInsets.only(top: 7, bottom: 6),
-                                height: 50,
-                                child: TextField(
-                                  controller: dateFromController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'From',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 13)),
-                                ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
-                                height: 50,
-                                margin: EdgeInsets.only(top: 7, bottom: 6),
-                                child: TextField(
-                                  controller: dateToController,
-                                  style: TextStyle(
-                                      color: Color(0xffe1e1e1), fontSize: 13),
-                                  decoration: InputDecoration(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.always,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffff8181),
-                                            width: 1.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Color(0xffe1e1e1),
-                                            width: 1.0),
-                                      ),
-                                      hintText: 'To',
-                                      hintStyle: TextStyle(
-                                          color: Color(0xffe1e1e1),
-                                          fontSize: 13)),
-                                ),
+                                  padding: EdgeInsets.only(left: 20, right: 20),
+                                  width:
+                                      MediaQuery.of(context).size.width * .45,
+                                  child: Text(
+                                    "If this switch is turned off, the event won't show on customer's event tab",
+                                    style: TextStyle(
+                                        color: Color(0x5fe1e1e1), fontSize: 11),
+                                  )),
+                              Switch(
+                                value: _isSwitched,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isSwitched = value;
+                                  });
+                                },
+                                activeTrackColor: Colors.lightGreenAccent,
+                                activeColor: Colors.green,
+                                inactiveTrackColor: Colors.blueGrey[100],
+                                inactiveThumbColor: Colors.blueGrey[200],
                               ),
                             ],
                           ),
+                          textinput(context, 'Title', titleController),
+                          Container(
+                            width: MediaQuery.of(context).size.width - 40,
+                            child: TextField(
+                              controller: descriptionController,
+                              maxLines: 6,
+                              style: TextStyle(
+                                  color: Color(0xffe1e1e1), fontSize: 13),
+                              decoration: InputDecoration(
+                                  floatingLabelBehavior:
+                                      FloatingLabelBehavior.always,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xffff8181), width: 1.0),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xffe1e1e1), width: 1.0),
+                                  ),
+                                  hintText: 'Description',
+                                  hintStyle: TextStyle(
+                                      color: Color(0xffe1e1e1), fontSize: 13)),
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 5.0, bottom: 5.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text('Select dates',
+                                          style: TextStyle(
+                                              color: Color(0xffe1e1e1),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.normal)),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      margin:
+                                          EdgeInsets.only(top: 7, bottom: 6),
+                                      height: 50,
+                                      child: TextField(
+                                        controller: dateFromController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'From',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 13)),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.35,
+                                      height: 50,
+                                      margin:
+                                          EdgeInsets.only(top: 7, bottom: 6),
+                                      child: TextField(
+                                        controller: dateToController,
+                                        style: TextStyle(
+                                            color: Color(0xffe1e1e1),
+                                            fontSize: 13),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'To',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 13)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                GestureDetector(
+                                    child: bottombtn(
+                                        Color(0xffff8181),
+                                        Color(0xffe1e1e1),
+                                        'Done',
+                                        MediaQuery.of(context).size.width * 0.5,
+                                        true,
+                                        false,
+                                        false),
+                                    onTap: () {
+                                      _load();
+                                      if (_image != null) {
+                                        uploadEventImage();
+                                      } else {
+                                        updateEventInfo(null);
+                                      }
+                                    })
+                              ])
                         ],
-                      ),
-                    ),
-                    Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          GestureDetector(
-                              child: bottombtn(
-                                  Color(0xffff8181),
-                                  Color(0xffe1e1e1),
-                                  'Done',
-                                  MediaQuery.of(context).size.width * 0.5,
-                                  true,
-                                  false,
-                                  false),
-                              onTap: () {
-                                _load();
-                                if (_image != null) {
-                                  uploadEventImage();
-                                } else {
-                                  updateEventInfo(null);
-                                }
-
-                              })
-                        ])
-                  ],
-                )),
-          ),
-        ),
-      ),
+                      )),
+                ),
+              ),
+            ),
     );
   }
 }
@@ -724,12 +738,28 @@ class Events extends StatefulWidget {
 }
 
 class _EventsState extends State<Events> {
+  var uid;
+  @override
+  void initState() {
+    getUserId();
+  }
+
+  getUserId() {
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    final User user = auth.currentUser;
+
+    setState(() {
+      uid = user.uid;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       child: Stack(
         children: [
-          Align(alignment: Alignment.center, child: EventList()),
+          Align(alignment: Alignment.center, child: EventList(userId: uid)),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -779,20 +809,16 @@ class _EventsState extends State<Events> {
 }
 
 class EventList extends StatelessWidget {
-  getUserId() {
-    FirebaseAuth auth = FirebaseAuth.instance;
-
-    final User user = auth.currentUser;
-    return user.uid;
-  }
+  final userId;
+  const EventList({Key key, @required this.userId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('Events')
-          // .where("storeId", isEqualTo: getUserId)
-          // .orderBy('timestamp', descending: true)
+          .orderBy('timeStamp', descending: true)
+          .where("storeId", isEqualTo: userId)
           .snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
@@ -897,33 +923,34 @@ class EventCard extends StatelessWidget {
       child: Container(
         // image, name of event, date of event(from and to),special description
         margin: EdgeInsets.only(top: 10, bottom: 10, left: 10, right: 10),
-         padding: EdgeInsets.only(top: 15,),
+        padding: EdgeInsets.only(
+          top: 15,
+        ),
         width: MediaQuery.of(context).size.width - 40,
         // color should be random between the colors you used previously
         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xfff4f4f4)),
-
-          borderRadius: BorderRadius.circular(6)),
+            border: Border.all(color: Color(0xfff4f4f4)),
+            borderRadius: BorderRadius.circular(6)),
         child: Column(
           children: [
             imageUrl == null || imageUrl == ''
                 ? null
                 : ClipRRect(
-                    child: Image.network(imageUrl,
-                    height: 240,
-                    width: MediaQuery.of(context).size.width - 70,
-                    fit: BoxFit.cover,
-                    
+                    child: Image.network(
+                      imageUrl,
+                      height: 240,
+                      width: MediaQuery.of(context).size.width - 70,
+                      fit: BoxFit.cover,
                     ),
                     borderRadius: BorderRadius.all(
-                       Radius.circular(6.0),
-                        )),
+                      Radius.circular(6.0),
+                    )),
             Padding(
               // margin: EdgeInsets.only(top: 5, bottom: 10),
               padding: EdgeInsets.only(top: 10, bottom: 10, left: 5, right: 5),
               //  width: MediaQuery.of(context).size.width - 40,
               // color should be random between the colors you used previously
-              
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

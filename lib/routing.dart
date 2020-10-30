@@ -79,12 +79,11 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
               title: 'Your Store',
               snippet: 'This is the Selected Store Location')));
       _markers.add(Marker(
-        markerId: MarkerId('1'),
-        position: widget.orderLocation,
-        infoWindow: InfoWindow(
-              title: 'Order Location',
-              snippet: 'This is the Set Delivery Location')
-      ));
+          markerId: MarkerId('1'),
+          position: widget.orderLocation,
+          infoWindow: InfoWindow(
+              title: 'Delivery Location',
+              snippet: 'This is the Set Delivery Location')));
     });
     setMapStyle();
   }
@@ -161,25 +160,25 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     _lastMapPosition = position.target;
   }
 
-  _onAddMarkerButtonPressed() {
-    setState(() {
-      _markers.add(Marker(
-          markerId: MarkerId(_lastMapPosition.toString()),
-          position: _lastMapPosition,
-          infoWindow: InfoWindow(
-              title: "Your Store",
-              snippet: "this is the place you selected",
-              onTap: () {}),
-          onTap: () {},
-          icon: BitmapDescriptor.defaultMarker));
-      print('----------------------------------------------------------------');
-      print(_initialPosition);
-      print('----------------------------------------------------------------');
-      print(_lastMapPosition);
-      print('----------------------------------------------------------------');
-      _initialPosition = _lastMapPosition;
-    });
-  }
+  // _onAddMarkerButtonPressed() {
+  //   setState(() {
+  //     _markers.add(Marker(
+  //         markerId: MarkerId(_lastMapPosition.toString()),
+  //         position: _lastMapPosition,
+  //         infoWindow: InfoWindow(
+  //             title: "Your Store",
+  //             snippet: "this is the place you selected",
+  //             onTap: () {}),
+  //         onTap: () {},
+  //         icon: BitmapDescriptor.defaultMarker));
+  //     print('----------------------------------------------------------------');
+  //     print(_initialPosition);
+  //     print('----------------------------------------------------------------');
+  //     print(_lastMapPosition);
+  //     print('----------------------------------------------------------------');
+  //     _initialPosition = _lastMapPosition;
+  //   });
+  // }
 
   _getSelectedLocation() {
     // use this function to update information to firebase about the store
@@ -310,8 +309,8 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
           centerTitle: true,
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
-          title:  Text('Order Location'),
-          
+          title: Text('Order Location'),
+
           // backgroundColor: Colors.black26,
           backgroundColor: Color(0xff16172a),
           elevation: 0.0,
@@ -446,42 +445,23 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                       : Container(),
                   Align(
                     alignment: Alignment.bottomRight,
-                    child: _markers.length == 0
-                        ? GestureDetector(
-                            onTap: () {
-                              // upload either the location selected or current location to firebase
-                              print(_markers.length);
-                              // addStoreLocation();
-                              // navigator pop
-                              // Navigator.pop(context);
-                              _onAddMarkerButtonPressed();
-                            },
-                            child: bottombtn(
-                                Color(0xffff8181),
-                                Color(0xffe1e1e1),
-                                'Select',
-                                MediaQuery.of(context).size.width * 0.5,
-                                true,
-                                false,
-                                false),
-                          )
-                        : GestureDetector(
-                            onTap: () {
-                              // upload either the location selected or current location to firebase
-                              print(_markers.length);
+                    child: GestureDetector(
+                      onTap: () {
+                        // upload either the location selected or current location to firebase
+                        print(_markers.length);
 
-                              addStoreLocation();
-                              // navigator pop
-                            },
-                            child: bottombtn(
-                                Color(0xffff8181),
-                                Color(0xffe1e1e1),
-                                'Done',
-                                MediaQuery.of(context).size.width * 0.5,
-                                true,
-                                false,
-                                false),
-                          ),
+                        addStoreLocation();
+                        // navigator pop
+                      },
+                      child: bottombtn(
+                          Color(0xffff8181),
+                          Color(0xffe1e1e1),
+                          'Delivered',
+                          MediaQuery.of(context).size.width * 0.5,
+                          true,
+                          false,
+                          false),
+                    ),
                   ),
                 ]),
               ),

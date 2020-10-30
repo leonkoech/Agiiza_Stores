@@ -239,14 +239,17 @@ class _MyStoreState extends State<MyStore> {
                   title: storeName == '' ? 'Your Store' : storeName,
                   snippet: 'This is the current location of your store')));
         });
-        _currentLocation(_initialPosition);
+        _currentLocation(LatLng(lat, lng));
+        print('--------------------------');
         print(_initialPosition);
+        print('--------------------------');
       }).catchError((onError) {
         print(onError);
       });
     } else {
       print('location not found');
     }
+    load();
   }
 
   fetchStoreName() async {
@@ -274,8 +277,8 @@ class _MyStoreState extends State<MyStore> {
       // no such method error occurred
       print(e);
     }
-    load();
   }
+
   editStoreLocation() {
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -317,330 +320,347 @@ class _MyStoreState extends State<MyStore> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading?
-    Container(
-                child: Center(
-                  child: SpinKitChasingDots(
-                    color: Color(0xffff8181),
-                    size: 50.0,
-                    duration: Duration(milliseconds: 2000),
+    return _isLoading
+        ? Center(
+            child: Container(
+              child: Center(
+                child: SpinKitChasingDots(
+                  color: Color(0xffff8181),
+                  size: 50.0,
+                  duration: Duration(milliseconds: 2000),
+                ),
+              ),
+            ),
+          )
+        : Container(
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: Column(children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Store Details',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffe1e1e1)))
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Name',
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      showStoreAlertDialog(context, 'Name', 0);
+                    },
+                    child: Text('Edit',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
                   ),
-                ),
-              )
-    :Container(
-      padding: EdgeInsets.only(left: 10, right: 10),
-      child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Store Details',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xffe1e1e1)))
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Name',
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                showStoreAlertDialog(context, 'Name', 0);
-              },
-              child: Text('Edit',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            getStoreName(),
-          ],
-        ),
-        SizedBox(
-          height: 25,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Contact Phone',
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                showStoreAlertDialog(context, 'Contact Phone', 1);
-              },
-              child: Text('Edit',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [getStorePhone()],
-        ),
-
-        SizedBox(
-          height: 25,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text("Contact's First Name",
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                showStoreAlertDialog(context, "Contact's First Name", 2);
-              },
-              child: Text('Edit',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            getContactFirstName(),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text("Contact's Last Name",
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                showStoreAlertDialog(context, "Contact's Last Name", 3);
-              },
-              child: Text('Edit',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            getContactLastName(),
-          ],
-        ),
-        SizedBox(
-          height: 25,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Location',
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            UpdateMap(latlng: editStoreLocation())));
-              },
-              child: Text('Edit',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        // maps should here
-        Center(
-          child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(6)),
-                color: Color(0x5f8289ff),
+                ],
               ),
-              child: GoogleMap(
-                markers: _markers,
-                initialCameraPosition: CameraPosition(
-                  target: _initialPosition,
-                  zoom: 14.4746,
-                ),
-                onMapCreated: _onMapCreated,
-                zoomGesturesEnabled: false,
-                zoomControlsEnabled: false,
-                myLocationEnabled: false,
-                compassEnabled: false,
-                myLocationButtonEnabled: false,
+              SizedBox(
+                height: 15,
               ),
-              height: 120,
-              width: MediaQuery.of(context).size.width - 20),
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Account Details',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xffe1e1e1)))
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Email Address',
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text(getAccountEmail(),
-                style: TextStyle(
-                  color: Color(0xffe1e1e1),
-                  fontSize: 13,
-                )),
-          ],
-        ),
-        SizedBox(
-          height: 25,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('Password',
-                style: TextStyle(
-                    color: Color(0x9fe1e1e1),
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
-            GestureDetector(
-              onTap: () {
-                showStoreAlertDialog(context, 'Password', 4);
-              },
-              child: Text('Change',
-                  style: TextStyle(
-                    color: Color(0xffff8181),
-                    fontSize: 13,
-                  )),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 15,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text('**********',
-                style: TextStyle(
-                  color: Color(0xffe1e1e1),
-                  fontSize: 13,
-                )),
-          ],
-        ),
-        SizedBox(height: 15),
-        GestureDetector(
-          onTap: () async {
-            load();
-            //Create an instance of the current user.
-            FirebaseAuth auth = FirebaseAuth.instance;
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  getStoreName(),
+                ],
+              ),
+              SizedBox(
+                height: 25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Contact Phone',
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      showStoreAlertDialog(context, 'Contact Phone', 1);
+                    },
+                    child: Text('Edit',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [getStorePhone()],
+              ),
 
-            final User user = auth.currentUser;
-            await auth.signOut().then((value) async {
-              await deleteCredentials().then((value) {
-                Fluttertoast.showToast(
-                    msg: "Successfully Signed Out",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Color(0xff16172a),
-                    textColor: Color(0xfff4f4f4),
-                    fontSize: 10.0);
-                load();
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => LandingPage()),
-                    (Route<dynamic> route) => false);
-              });
-            });
-          },
-          child: borderbtn(
-              context, Color(0xffff8181), Color(0xffff8181), 'Sign Out'),
-        ),
-        SizedBox(height: 15),
-      ]),
-    );
+              SizedBox(
+                height: 25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text("Contact's First Name",
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      showStoreAlertDialog(context, "Contact's First Name", 2);
+                    },
+                    child: Text('Edit',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  getContactFirstName(),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text("Contact's Last Name",
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      showStoreAlertDialog(context, "Contact's Last Name", 3);
+                    },
+                    child: Text('Edit',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  getContactLastName(),
+                ],
+              ),
+              SizedBox(
+                height: 25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Location',
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  UpdateMap(latlng: editStoreLocation())));
+                    },
+                    child: Text('Edit',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              // maps should here
+              Center(
+                child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(6)),
+                      color: Color(0x5f8289ff),
+                    ),
+                    child: _initialPosition == null
+                        ? Container(
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)),
+                              color: Color(0x5f8289ff),
+                            ),
+                            child: Center(
+                              child: SpinKitChasingDots(
+                                color: Color(0xffff8181),
+                                size: 50.0,
+                                duration: Duration(milliseconds: 2000),
+                              ),
+                            ))
+                        : GoogleMap(
+                            markers: _markers,
+                            initialCameraPosition: CameraPosition(
+                              target: _initialPosition,
+                              zoom: 14.4746,
+                            ),
+                            onMapCreated: _onMapCreated,
+                            zoomGesturesEnabled: false,
+                            zoomControlsEnabled: false,
+                            myLocationEnabled: false,
+                            compassEnabled: false,
+                            myLocationButtonEnabled: false,
+                          ),
+                    height: 120,
+                    width: MediaQuery.of(context).size.width - 20),
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Account Details',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xffe1e1e1)))
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Email Address',
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text(getAccountEmail(),
+                      style: TextStyle(
+                        color: Color(0xffe1e1e1),
+                        fontSize: 13,
+                      )),
+                ],
+              ),
+              SizedBox(
+                height: 25,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('Password',
+                      style: TextStyle(
+                          color: Color(0x9fe1e1e1),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: () {
+                      showStoreAlertDialog(context, 'Password', 4);
+                    },
+                    child: Text('Change',
+                        style: TextStyle(
+                          color: Color(0xffff8181),
+                          fontSize: 13,
+                        )),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text('**********',
+                      style: TextStyle(
+                        color: Color(0xffe1e1e1),
+                        fontSize: 13,
+                      )),
+                ],
+              ),
+              SizedBox(height: 15),
+              GestureDetector(
+                onTap: () async {
+                  load();
+                  //Create an instance of the current user.
+                  FirebaseAuth auth = FirebaseAuth.instance;
+
+                  final User user = auth.currentUser;
+                  await auth.signOut().then((value) async {
+                    await deleteCredentials().then((value) {
+                      Fluttertoast.showToast(
+                          msg: "Successfully Signed Out",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          timeInSecForIosWeb: 1,
+                          backgroundColor: Color(0xff16172a),
+                          textColor: Color(0xfff4f4f4),
+                          fontSize: 10.0);
+                      load();
+                      Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (context) => LandingPage()),
+                          (Route<dynamic> route) => false);
+                    });
+                  });
+                },
+                child: borderbtn(
+                    context, Color(0xffff8181), Color(0xffff8181), 'Sign Out'),
+              ),
+              SizedBox(height: 15),
+            ]),
+          );
   }
 }
 
