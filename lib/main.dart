@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'location.dart';
 import 'events.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:encrypt/encrypt.dart' as enc;
 
 import 'order.dart';
 import 'store.dart';
@@ -2077,13 +2076,7 @@ Future<File> get _localFile async {
 
 Future<File> writeAuthDetails(email, password) async {
   final file = await _localFile;
-  final key = enc.Key.fromLength(32);
-  final iv = enc.IV.fromLength(8);
-
-  final encrypter = enc.Encrypter(enc.AES(key));
-
-  final encryptedPass = encrypter.encrypt(password, iv: iv);
-  String objText = '{"email": "$email", "password": "$password"}';
+    String objText = '{"email": "$email", "password": "$password"}';
 
   // Write the file.
   return file.writeAsString(objText);

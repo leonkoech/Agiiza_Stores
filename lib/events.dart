@@ -19,6 +19,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:date_time_picker/date_time_picker.dart';
 
 class CreateEvent extends StatefulWidget {
   @override
@@ -28,9 +29,14 @@ class CreateEvent extends StatefulWidget {
 class _CreateEventState extends State<CreateEvent> {
   bool _isSwitched = true;
   bool _isLoading = false;
+  bool _startDate = false;
+  bool _endDate = false;
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
-
+  final _startDateController = TextEditingController();
+  final _endDateController = TextEditingController();
+  final _startTimeController = TextEditingController();
+  final _endTimeController = TextEditingController();
   final dateToController = TextEditingController();
 
   final dateFromController = TextEditingController();
@@ -90,8 +96,10 @@ class _CreateEventState extends State<CreateEvent> {
       'storeId': uid,
       'title': titleController.text,
       'description': descriptionController.text,
-      'dateFrom': dateFromController.text,
-      'dateTo': dateToController.text,
+      'dateFrom': _startDateController.text,
+      'timeFrom': _startTimeController.text,
+      'dateTo': _endDateController.text,
+      'timeTo': _endTimeController.text,
       'imageUrl': value,
       'likes': 0,
       'active': _isSwitched,
@@ -272,66 +280,210 @@ class _CreateEventState extends State<CreateEvent> {
                                   children: [
                                     Container(
                                       width: MediaQuery.of(context).size.width *
-                                          0.35,
-                                      margin:
-                                          EdgeInsets.only(top: 7, bottom: 6),
-                                      height: 50,
-                                      child: TextField(
-                                        controller: dateFromController,
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13),
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _startDateController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.date,
+                                        // initialValue: DateTime.now().toString(),
+                                        firstDate: DateTime(2019),
+                                        lastDate: DateTime(2030),
+                                        dateLabelText: 'Date',
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: _startDate
+                                              ? Color(0xffff8181)
+                                              : Color(0x5ff4f4f4),
+                                        ),
                                         decoration: InputDecoration(
                                             floatingLabelBehavior:
                                                 FloatingLabelBehavior.always,
-                                            focusedBorder: OutlineInputBorder(
+                                            focusedBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffff8181),
                                                   width: 1.0),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
+                                            enabledBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffe1e1e1),
                                                   width: 1.0),
                                             ),
-                                            hintText: 'From',
+                                            hintText: 'From Date',
                                             hintStyle: TextStyle(
                                                 color: Color(0xffe1e1e1),
-                                                fontSize: 13)),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0xfff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) =>
+                                            print(_startDateController.text),
+                                        validator: (val) {
+                                          // print(val);
+                                          print(_startDateController);
+                                          return null;
+                                        },
+                                        onSaved: (val) =>
+                                            print(_startDateController),
                                       ),
                                     ),
                                     Container(
                                       width: MediaQuery.of(context).size.width *
-                                          0.35,
-                                      height: 50,
-                                      margin:
-                                          EdgeInsets.only(top: 7, bottom: 6),
-                                      child: TextField(
-                                        controller: dateToController,
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13),
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _startTimeController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.time,
+                                        // initialValue: DateTime.now().toString(),
+
+                                        dateLabelText: 'Time',
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: Color(0xfff4f4f4),
+                                        ),
                                         decoration: InputDecoration(
                                             floatingLabelBehavior:
                                                 FloatingLabelBehavior.always,
-                                            focusedBorder: OutlineInputBorder(
+                                            focusedBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffff8181),
                                                   width: 1.0),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
+                                            enabledBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffe1e1e1),
                                                   width: 1.0),
                                             ),
-                                            hintText: 'To',
+                                            hintText: 'From Time',
                                             hintStyle: TextStyle(
                                                 color: Color(0xffe1e1e1),
-                                                fontSize: 13)),
+                                                fontSize: 11)),
+                                        cursorColor: _startDate
+                                            ? Color(0xffff8181)
+                                            : Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
                                       ),
                                     ),
                                   ],
                                 ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _endDateController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.date,
+                                        // initialValue: DateTime.now().toString(),
+                                        firstDate: DateTime(2019),
+                                        lastDate: DateTime(2030),
+                                        dateLabelText: 'Date',
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: Color(0x5ff4f4f4),
+                                        ),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'End Date',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _endTimeController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.time,
+                                        // initialValue: DateTime.now().toString(),
+
+                                        dateLabelText: 'Time',
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: _startDate
+                                              ? Color(0xffff8181)
+                                              : Color(0x5ff4f4f4),
+                                        ),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: 'End Time',
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                        cursorColor: _startDate
+                                            ? Color(0xffff8181)
+                                            : Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
+                                      ),
+                                    ),
+                                  ],
+                                )
                               ],
                             ),
                           ),
@@ -373,6 +525,8 @@ class EditEvent extends StatefulWidget {
   final String eventID;
   final bool active;
   final String timestamp;
+  final startTime;
+  final endTime;
   const EditEvent(
       {Key key,
       @required this.title,
@@ -382,6 +536,8 @@ class EditEvent extends StatefulWidget {
       @required this.eventID,
       @required this.active,
       @required this.timestamp,
+      @required this.startTime,
+      @required this.endTime,
       this.imageUrl})
       : super(key: key);
   @override
@@ -399,6 +555,11 @@ class _EditEventState extends State<EditEvent> {
   File _image;
   final picker = ImagePicker();
   bool _isLoading = false;
+
+  final _startDateController = TextEditingController();
+  final _endDateController = TextEditingController();
+  final _startTimeController = TextEditingController();
+  final _endTimeController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -459,11 +620,18 @@ class _EditEventState extends State<EditEvent> {
       'description': descriptionController.text != ''
           ? descriptionController.text
           : widget.description,
-      'dateFrom': dateFromController.text != ''
-          ? dateFromController.text
+      'dateFrom': _startDateController.text != ''
+          ? _startDateController.text
           : widget.startDate,
-      'dateTo':
-          dateToController.text != '' ? dateToController.text : widget.endDate,
+      'dateTo': _endDateController.text != ''
+          ? _endDateController.text
+          : widget.endDate,
+      'timeFrom': _startTimeController.text != ''
+          ? _startTimeController.text
+          : widget.startTime,
+      'timeTo': _endTimeController.text != ''
+          ? _endTimeController.text
+          : widget.endDate,
       'imageUrl': value != null ? value : widget.imageUrl,
       'active': _isSwitched,
       'timeStamp': Timestamp.now(),
@@ -638,66 +806,202 @@ class _EditEventState extends State<EditEvent> {
                                   children: [
                                     Container(
                                       width: MediaQuery.of(context).size.width *
-                                          0.35,
-                                      margin:
-                                          EdgeInsets.only(top: 7, bottom: 6),
-                                      height: 50,
-                                      child: TextField(
-                                        controller: dateFromController,
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13),
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _startDateController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.date,
+                                        // initialValue: DateTime.now().toString(),
+                                        firstDate: DateTime(2019),
+                                        lastDate: DateTime(2030),
+                                        dateLabelText: widget.startDate,
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: Color(0x5ff4f4f4),
+                                        ),
                                         decoration: InputDecoration(
                                             floatingLabelBehavior:
                                                 FloatingLabelBehavior.always,
-                                            focusedBorder: OutlineInputBorder(
+                                            focusedBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffff8181),
                                                   width: 1.0),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
+                                            enabledBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffe1e1e1),
                                                   width: 1.0),
                                             ),
-                                            hintText: 'From',
+                                            hintText: widget.startDate,
                                             hintStyle: TextStyle(
                                                 color: Color(0xffe1e1e1),
-                                                fontSize: 13)),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0xfff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) =>
+                                            print(_startDateController.text),
+                                        validator: (val) {
+                                          // print(val);
+                                          print(_startDateController);
+                                          return null;
+                                        },
+                                        onSaved: (val) =>
+                                            print(_startDateController),
                                       ),
                                     ),
                                     Container(
                                       width: MediaQuery.of(context).size.width *
-                                          0.35,
-                                      height: 50,
-                                      margin:
-                                          EdgeInsets.only(top: 7, bottom: 6),
-                                      child: TextField(
-                                        controller: dateToController,
-                                        style: TextStyle(
-                                            color: Color(0xffe1e1e1),
-                                            fontSize: 13),
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _startTimeController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.time,
+                                        // initialValue: DateTime.now().toString(),
+
+                                        dateLabelText: widget.startTime,
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: Color(0xfff4f4f4),
+                                        ),
                                         decoration: InputDecoration(
                                             floatingLabelBehavior:
                                                 FloatingLabelBehavior.always,
-                                            focusedBorder: OutlineInputBorder(
+                                            focusedBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffff8181),
                                                   width: 1.0),
                                             ),
-                                            enabledBorder: OutlineInputBorder(
+                                            enabledBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Color(0xffe1e1e1),
                                                   width: 1.0),
                                             ),
-                                            hintText: 'To',
+                                            hintText: widget.startDate,
                                             hintStyle: TextStyle(
                                                 color: Color(0xffe1e1e1),
-                                                fontSize: 13)),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
                                       ),
                                     ),
                                   ],
                                 ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _endDateController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.date,
+                                        // initialValue: DateTime.now().toString(),
+                                        firstDate: DateTime(2019),
+                                        lastDate: DateTime(2030),
+                                        dateLabelText: widget.endDate,
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color: Color(0x5ff4f4f4),
+                                        ),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: widget.endDate,
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.4,
+                                      child: DateTimePicker(
+                                        controller: _endTimeController,
+                                        // dateMask: 'd MMM, yyyy',
+                                        type: DateTimePickerType.time,
+                                        // initialValue: DateTime.now().toString(),
+
+                                        dateLabelText: widget.endTime,
+                                        // timeLabelText: 'Time',
+
+                                        icon: Icon(
+                                          Icons.event,
+                                          color:Color(0x5ff4f4f4),
+                                        ),
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.always,
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffff8181),
+                                                  width: 1.0),
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffe1e1e1),
+                                                  width: 1.0),
+                                            ),
+                                            hintText: widget.endTime,
+                                            hintStyle: TextStyle(
+                                                color: Color(0xffe1e1e1),
+                                                fontSize: 11)),
+                                        cursorColor: Color(0x5ff4f4f4),
+                                        style: TextStyle(
+                                          color: Color(0xfff4f4f4),
+                                          fontSize: 11,
+                                        ),
+                                        onChanged: (val) => print(val),
+                                        validator: (val) {
+                                          print(val);
+                                          return null;
+                                        },
+                                        onSaved: (val) => print(val),
+                                      ),
+                                    ),
+                                  ],
+                                )
                               ],
                             ),
                           ),
@@ -852,6 +1156,8 @@ class EventList extends StatelessWidget {
                       description: document.data()['description'],
                       title: document.data()['title'],
                       endDate: document.data()['dateTo'],
+                      startTime: document.data()['timeFrom'],
+                      endTime: document.data()['timeTo'],
                       storeId: document.data()['storeId'],
                       storeName: document.data()['storeName'],
                       active: document.data()['active'],
@@ -887,6 +1193,8 @@ class EventCard extends StatelessWidget {
   final String date;
   final timestamp;
   final String eventId;
+  final startTime;
+  final endTime;
   const EventCard(
       {Key key,
       @required this.title,
@@ -900,6 +1208,8 @@ class EventCard extends StatelessWidget {
       @required this.eventId,
       this.time,
       this.date,
+      this.startTime,
+      this.endTime,
       this.imageUrl})
       : super(key: key);
   @override
@@ -910,15 +1220,16 @@ class EventCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => EditEvent(
-                      active: active,
-                      startDate: startDate,
-                      endDate: endDate,
-                      eventID: eventId,
-                      description: description,
-                      title: title,
-                      timestamp: timestamp,
-                      imageUrl: imageUrl,
-                    )));
+                    active: active,
+                    startDate: startDate,
+                    endDate: endDate,
+                    eventID: eventId,
+                    description: description,
+                    title: title,
+                    timestamp: timestamp,
+                    imageUrl: imageUrl,
+                    startTime: startTime,
+                    endTime: endTime)));
       },
       child: Container(
         // image, name of event, date of event(from and to),special description
@@ -970,31 +1281,61 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
                   Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.40,
-                      padding: const EdgeInsets.only(
-                          left: 10.0, right: 10, top: 8, bottom: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(startDate,
-                              style: TextStyle(
-                                  color: Color(0xffe6f1ff),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.normal)),
-                          Text(' to ',
-                              style: TextStyle(
-                                  color: Color(0xffe6f1ff),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.normal)),
-                          Text(endDate,
-                              style: TextStyle(
-                                  color: Color(0xffe6f1ff),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.normal))
-                        ],
-                      ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.40,
+                          padding: const EdgeInsets.only(
+                              left: 10.0, right: 10, top: 8, bottom: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(startDate,
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal)),
+                              Text(' to ',
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal)),
+                              Text(endDate,
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal))
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.40,
+                          padding: const EdgeInsets.only(
+                              left: 10.0, right: 10, top: 8, bottom: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(startTime,
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal)),
+                              Text(' to ',
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal)),
+                              Text(startTime,
+                                  style: TextStyle(
+                                      color: Color(0xffe6f1ff),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.normal))
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Container(

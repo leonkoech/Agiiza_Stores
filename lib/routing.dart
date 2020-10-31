@@ -42,7 +42,24 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
   // Map storing polylines created by connecting
   // two points
   Map<PolylineId, Polyline> polylines = {};
+  var destinationAdressName;
   // Create the polylines for showing the route between two places
+  final geo.Geolocator _geolocator = geo.Geolocator();
+
+  _getLocationAddress(lat, lng) async {
+    // this will get the coordinates from the lat-long using Geocoder Coordinates
+    final coordinates = Coordinates(lat, lng);
+
+// this fetches multiple address, but you need to get the first address by doing the following two codes
+    var addresses =
+        await Geocoder.local.findAddressesFromCoordinates(coordinates);
+    var first = addresses.first;
+    print(first.locality);
+    print(first.subLocality);
+    setState(() {
+      destinationAdressName = first.locality;
+    });
+  }
 
   _createPolylines(startlat, startlng, destinationlat, destinationlng) async {
     // Initializing PolylinePoints
@@ -60,23 +77,23 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     //     .catchError((onError) {
     //   print('errooooororororororororororor');
     // });
-      await polylinePoints
+    await polylinePoints
         .getRouteBetweenCoordinates(
       'AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns', // Google Maps API Key
       pos.PointLatLng(startlat, startlng),
       pos.PointLatLng(destinationlat, destinationlng),
-      travelMode: pos.TravelMode.driving,
-    ).then((value) {
- print(
+      travelMode: pos.TravelMode.walking,
+    )
+        .then((value) {
+      print(
           '-----------------------------------------------------------------------------------------------------------------------------');
       print(value.points);
       print(
           '-----------------------------------------------------------------------------------------------------------------------------');
- value.points.forEach((pos.PointLatLng point) {
+      value.points.forEach((pos.PointLatLng point) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });      
-    })
-        .catchError((onError) {
+      });
+    }).catchError((onError) {
       print('errooooororororororororororor');
     });
     // // Adding the coordinates to the list
@@ -137,11 +154,9 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     // List<Placemark> placemark = await Geolocator.placemarkFromCoordinates(position.latitude, position.longitude);
     setState(() {
       _initialPosition = LatLng(position.latitude, position.longitude);
+      _getLocationAddress(widget.lat, widget.lng);
       _createPolylines(
-          position.latitude,
-          position.longitude,
-          widget.lat,
-          widget.lng);
+          position.latitude, position.longitude, widget.lat, widget.lng);
 
       // print('${placemark[0].name}');
     });
@@ -427,7 +442,37 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                     onCameraMove: _onCameraMove,
                     myLocationEnabled: true,
                     compassEnabled: false,
+                    mapToolbarEnabled: true,
                     myLocationButtonEnabled: false,
+                  ),
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      height:45,
+                      padding: EdgeInsets.all(10),
+                      margin: EdgeInsets.only(top:10,right:20),
+                      width: MediaQuery.of(context).size.width*0.7,
+                      decoration: BoxDecoration(
+                        color: Color(0xff16172a),
+                        border: Border.all(color: Color(0xffff8181)),
+                        borderRadius: BorderRadius.circular(6.0)
+                      ),
+                      child:Center(
+                        child:Row(
+                          // mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Destination: ',
+                                style: TextStyle(color: Color(0xffff8181))
+                            ),
+                             Text(
+                              destinationAdressName.toString(),
+                                style: TextStyle(color: Color(0xfff4f4f4))
+                            ),
+                          ],
+                        )
+                      )
+                    )
                   ),
                   Align(
                     alignment: Alignment.topRight,
@@ -482,67 +527,7 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                       ],
                     ),
                   ),
-                  _isSearch
-                      ? Align(
-                          alignment: Alignment.topCenter,
-                          child: new ListView.builder(
-                            itemCount: location == null ? 0 : location.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  moveMapCamera(location[index]['geometry']);
-                                },
-                                child: new Card(
-                                  color: Color(0xff16172a),
-                                  elevation: 1.0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Center(
-                                        child: Column(
-                                      children: [
-                                        Container(
-                                            margin: EdgeInsets.only(
-                                                top: 10, bottom: 7.5),
-                                            child: new Text(
-                                                location[index]
-                                                    ["formatted_address"],
-                                                style: TextStyle(
-                                                    color: Color(0xffcccccc),
-                                                    fontSize: 14))),
-                                        Container(
-                                            margin: EdgeInsets.only(
-                                                top: 7.5, bottom: 10),
-                                            child: fetchLatLong(
-                                                location[index]['geometry'])),
-                                      ],
-                                    )),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                      : Container(),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: GestureDetector(
-                      onTap: () {
-                        // upload either the location selected or current location to firebase
-                        print(_markers.length);
-
-                        addStoreLocation();
-                        // navigator pop
-                      },
-                      child: bottombtn(
-                          Color(0xffff8181),
-                          Color(0xffe1e1e1),
-                          'Delivered',
-                          MediaQuery.of(context).size.width * 0.5,
-                          true,
-                          false,
-                          false),
-                    ),
-                  ),
+              
                 ]),
               ),
       ),

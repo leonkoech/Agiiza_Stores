@@ -31,7 +31,7 @@ dependencies:
   # spinkkit for loading
   flutter_spinkit: ^4.1.2+1
   path_provider: ^1.6.22
-  encrypt: ^4.1.0
+  date_time_picker: "^1.0.2"
 
   # general packages
   intl: ^0.16.1
