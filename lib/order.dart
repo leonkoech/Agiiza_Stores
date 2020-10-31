@@ -1111,6 +1111,7 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
     load();
     FirebaseFirestore.instance.collection('Orders').doc(widget.orderId).update({
       'statusCode': _value,
+      _value==1?'processingTime':_value==2?'dispatchedTime':_value==3?'deliveredTime':'cancelledTime': DateTime.now()
     }).then((value) {
       load();
       Fluttertoast.showToast(
