@@ -950,6 +950,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => OrderRoutingMap(
+                          lat:convertToDouble(_orderLocation, 0),
+                          lng:convertToDouble(_orderLocation, 1),
                               orderLocation: LatLng(
                                   convertToDouble(_orderLocation, 0),
                                   convertToDouble(_orderLocation, 1)),

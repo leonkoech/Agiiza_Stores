@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:geocoder/geocoder.dart';
+import 'package:geolocator/geolocator.dart';
 import 'main.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_webservice/places.dart';
@@ -19,15 +20,72 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:http/http.dart' as http;
+// routing package
+import 'package:flutter_polyline_points/flutter_polyline_points.dart' as pos;
 
 class OrderRoutingMap extends StatefulWidget {
   final orderLocation;
-  const OrderRoutingMap({Key key, this.orderLocation}) : super(key: key);
+  final lat, lng;
+  const OrderRoutingMap({Key key, this.orderLocation, this.lat, this.lng})
+      : super(key: key);
   @override
   OrderRoutingMapState createState() => OrderRoutingMapState();
 }
 
 class OrderRoutingMapState extends State<OrderRoutingMap> {
+  // Object for PolylinePoints
+  pos.PolylinePoints polylinePoints;
+
+  // List of coordinates to join
+  List<LatLng> polylineCoordinates = [];
+
+  // Map storing polylines created by connecting
+  // two points
+  Map<PolylineId, Polyline> polylines = {};
+  // Create the polylines for showing the route between two places
+
+  _createPolylines(startlat, startlng, destinationlat, destinationlng) async {
+    // Initializing PolylinePoints
+    polylinePoints = pos.PolylinePoints();
+
+    // Generating the list of coordinates to be used for
+    // drawing the polylines
+    pos.PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      'AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns', // Google Maps API Key
+      pos.PointLatLng(startlat, startlng),
+      pos.PointLatLng(destinationlat, destinationlng),
+      travelMode: pos.TravelMode.transit,
+    );
+
+    // Adding the coordinates to the list
+    if (result.points.isNotEmpty) {
+      result.points.forEach((pos.PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
+    }
+
+    // Defining an ID
+    PolylineId id = PolylineId('Delivery');
+
+    // Initializing Polyline
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: Colors.red,
+      points: polylineCoordinates,
+      width: 3,
+    );
+
+    // Adding the polyline to the map
+    setState(() {
+      polylines[id] = polyline;
+    });
+     print(
+          '-----------------------------------------------------------------------------------------------------------------------------');
+      print(polylines.values.length);
+      print(
+          '-----------------------------------------------------------------------------------------------------------------------------');
+  }
+
   GoogleMapController controller1;
 
   static LatLng _center = LatLng(-15.4630239974464, 28.363397732282127);
@@ -40,8 +98,9 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
   @override
   void initState() {
     super.initState();
-    // _getUserLocation();
-    getStoreLatLng();
+    _getUserLocation();
+    // getStoreLatLng();
+
     locationSearch.addListener(() {
       // final text = locationSearch.text.toLowerCase();
       // search location here
@@ -56,6 +115,12 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     // List<Placemark> placemark = await Geolocator.placemarkFromCoordinates(position.latitude, position.longitude);
     setState(() {
       _initialPosition = LatLng(position.latitude, position.longitude);
+      _createPolylines(
+          convertToDouble(_initialPosition.toString(), 0),
+          convertToDouble(_initialPosition.toString(), 1),
+          widget.lat,
+          widget.lng);
+     
       // print('${placemark[0].name}');
     });
   }
@@ -63,21 +128,13 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
   _onMapCreated(GoogleMapController controller) {
     controller1 = controller;
     setState(() {
-      // add markers
-      // _markers.add(Marker(
-      //     markerId: MarkerId("0"),
-      //     position: LatLng(
-      //       -1.2921,
-      //       36.8219,
-      //     ),
-      //     infoWindow:
-      //         InfoWindow(title: "Nairobi", snippet: "City Under The Sun")));
       _markers.add(Marker(
           markerId: MarkerId("0"),
           position: _initialPosition,
           infoWindow: InfoWindow(
-              title: 'Your Store',
-              snippet: 'This is the Selected Store Location')));
+              title: 'Your Location',
+              snippet: 'This is the Location you are in now')));
+      // add another marker of where the delivery location was set
       _markers.add(Marker(
           markerId: MarkerId('1'),
           position: widget.orderLocation,
@@ -85,6 +142,13 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
               title: 'Delivery Location',
               snippet: 'This is the Set Delivery Location')));
     });
+    // draw the polylines from the user's current location
+    print(
+        '----------------------------------------------------------------------------------------------');
+    print(
+      convertToDouble(_initialPosition.toString(), 0),
+    );
+
     setMapStyle();
   }
 
@@ -190,7 +254,7 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
       CameraPosition(
         bearing: 0,
         target: _initialPosition,
-        zoom: 17.0,
+        zoom: 12.0,
       ),
     ));
   }
@@ -329,10 +393,11 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                 child: Stack(children: <Widget>[
                   GoogleMap(
                     markers: _markers,
+                    polylines: Set<Polyline>.of(polylines.values),
                     mapType: _currentMapType,
                     initialCameraPosition: CameraPosition(
-                      target: _initialPosition,
-                      zoom: 14.4746,
+                      target: widget.orderLocation,
+                      zoom: 12.4746,
                     ),
                     onMapCreated: _onMapCreated,
                     zoomGesturesEnabled: true,
@@ -341,13 +406,6 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                     myLocationEnabled: true,
                     compassEnabled: false,
                     myLocationButtonEnabled: false,
-                  ),
-                  Center(
-                    child: Icon(
-                      Icons.location_searching,
-                      size: 45,
-                      color: Color(0xffff8181),
-                    ),
                   ),
                   Align(
                     alignment: Alignment.topRight,
