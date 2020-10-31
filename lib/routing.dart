@@ -50,19 +50,41 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
 
     // Generating the list of coordinates to be used for
     // drawing the polylines
-    pos.PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+    // pos.PolylineResult result = await polylinePoints
+    //     .getRouteBetweenCoordinates(
+    //   'AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns', // Google Maps API Key
+    //   pos.PointLatLng(startlat, startlng),
+    //   pos.PointLatLng(destinationlat, destinationlng),
+    //   travelMode: pos.TravelMode.transit,
+    // )
+    //     .catchError((onError) {
+    //   print('errooooororororororororororor');
+    // });
+      await polylinePoints
+        .getRouteBetweenCoordinates(
       'AIzaSyAbXcm4JYs8TNbxHuuhABjiiecaLzgvtns', // Google Maps API Key
       pos.PointLatLng(startlat, startlng),
       pos.PointLatLng(destinationlat, destinationlng),
-      travelMode: pos.TravelMode.transit,
-    );
-
-    // Adding the coordinates to the list
-    if (result.points.isNotEmpty) {
-      result.points.forEach((pos.PointLatLng point) {
+      travelMode: pos.TravelMode.driving,
+    ).then((value) {
+ print(
+          '-----------------------------------------------------------------------------------------------------------------------------');
+      print(value.points);
+      print(
+          '-----------------------------------------------------------------------------------------------------------------------------');
+ value.points.forEach((pos.PointLatLng point) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
-    }
+      });      
+    })
+        .catchError((onError) {
+      print('errooooororororororororororor');
+    });
+    // // Adding the coordinates to the list
+    // if (result.points.isNotEmpty) {
+    //  result.points.forEach((pos.PointLatLng point) {
+    //     polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+    //   });
+    // }
 
     // Defining an ID
     PolylineId id = PolylineId('Delivery');
@@ -79,11 +101,11 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     setState(() {
       polylines[id] = polyline;
     });
-     print(
-          '-----------------------------------------------------------------------------------------------------------------------------');
-      print(polylines.values.length);
-      print(
-          '-----------------------------------------------------------------------------------------------------------------------------');
+    // print(
+    //     '-----------------------------------------------------------------------------------------------------------------------------');
+    // print(result.points.length);
+    // print(
+    //     '-----------------------------------------------------------------------------------------------------------------------------');
   }
 
   GoogleMapController controller1;
@@ -116,11 +138,11 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     setState(() {
       _initialPosition = LatLng(position.latitude, position.longitude);
       _createPolylines(
-          convertToDouble(_initialPosition.toString(), 0),
-          convertToDouble(_initialPosition.toString(), 1),
+          position.latitude,
+          position.longitude,
           widget.lat,
           widget.lng);
-     
+
       // print('${placemark[0].name}');
     });
   }

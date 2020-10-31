@@ -172,14 +172,15 @@ class _LandingPageState extends State<LandingPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                       Container(
-                          height: 100,
-                          width: 100,
-                          child: ClipRect(child: Text('agiiza')
-                              // child: Image(
-                              //     image:
-                              //         AssetImage('assets/images/liquor.png'))
-                              )),
-                      Text('agiiza',
+                          // height: 100,
+                          // width: 100,
+                          // child: ClipRect(child: Text('agiiza')
+                          //     // child: Image(
+                          //     //     image:
+                          //     //         AssetImage('assets/images/liquor.png'))
+                          //     )
+                              ),
+                      Text('Agiiza Stores',
                           style: TextStyle(
                               fontSize: 30,
                               color: Color(0xffe1e1e1),
@@ -327,7 +328,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                   padding: EdgeInsets.only(top: 10, bottom: 6),
-                  child: Text('agiiza',
+                  child: Text('agiiza stores',
                       style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.bold,
@@ -1553,7 +1554,7 @@ class _HomePageState extends State<HomePage> {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           title: _isSearch == false
-              ? Text('AGIIZA',
+              ? Text('AGIIZA STORES',
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 25,
