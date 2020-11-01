@@ -1281,61 +1281,30 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
                   Center(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.40,
-                          padding: const EdgeInsets.only(
-                              left: 10.0, right: 10, top: 8, bottom: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(startDate,
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal)),
-                              Text(' to ',
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal)),
-                              Text(endDate,
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal))
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.40,
-                          padding: const EdgeInsets.only(
-                              left: 10.0, right: 10, top: 8, bottom: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(startTime,
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal)),
-                              Text(' to ',
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal)),
-                              Text(startTime,
-                                  style: TextStyle(
-                                      color: Color(0xffe6f1ff),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal))
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 10.0, right: 10, top: 8, bottom: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(startDate+' at '+startTime,
+                              style: TextStyle(
+                                  color: Color(0xffe6f1ff),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.normal)),
+                          Text(' to ',
+                              style: TextStyle(
+                                  color: Color(0xffe6f1ff),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.normal)),
+                          Text(endDate+' at '+endTime,
+                              style: TextStyle(
+                                  color: Color(0xffe6f1ff),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.normal))
+                        ],
+                      ),
                     ),
                   ),
                   Container(

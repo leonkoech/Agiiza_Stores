@@ -23,10 +23,13 @@ import 'package:http/http.dart' as http;
 // routing package
 import 'package:flutter_polyline_points/flutter_polyline_points.dart' as pos;
 
+import 'order.dart';
+
 class OrderRoutingMap extends StatefulWidget {
   final orderLocation;
   final lat, lng;
-  const OrderRoutingMap({Key key, this.orderLocation, this.lat, this.lng})
+  final statusCode, orderId;
+  const OrderRoutingMap({Key key, this.orderLocation, this.lat, this.lng,@required this.statusCode, this.orderId})
       : super(key: key);
   @override
   OrderRoutingMapState createState() => OrderRoutingMapState();
@@ -446,34 +449,79 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                     myLocationButtonEnabled: false,
                   ),
                   Align(
-                    alignment: Alignment.topCenter,
-                    child: Container(
-                      height:45,
-                      padding: EdgeInsets.all(10),
-                      margin: EdgeInsets.only(top:10,right:20),
-                      width: MediaQuery.of(context).size.width*0.7,
-                      decoration: BoxDecoration(
-                        color: Color(0xff16172a),
-                        border: Border.all(color: Color(0xffff8181)),
-                        borderRadius: BorderRadius.circular(6.0)
-                      ),
-                      child:Center(
-                        child:Row(
-                          // mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Destination: ',
-                                style: TextStyle(color: Color(0xffff8181))
-                            ),
-                             Text(
-                              destinationAdressName.toString(),
-                                style: TextStyle(color: Color(0xfff4f4f4))
-                            ),
-                          ],
-                        )
-                      )
-                    )
+                    alignment: Alignment.bottomLeft,
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return OrderStatusPopup(
+                                  statusCode: widget.statusCode,
+                                  orderId: widget.orderId,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.91);
+                            });
+                      },
+                      child: Container(
+                        margin: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Color(0xffff8181),
+                            borderRadius: BorderRadius.all(Radius.circular(6)),
+                          ),
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: 40,
+                          child: Center(
+                            child: Text('Change status',
+                                style: TextStyle(
+                                  color: Color(0xffe1e1e1),
+                                  fontSize: 13,
+                                )),
+                          )),
+                    ),
                   ),
+                  Align(
+                      alignment: Alignment.topCenter,
+                      child: Column(
+                        children: [
+                           Container(
+                              // height: 45,
+                              padding: EdgeInsets.all(10),
+                              margin: EdgeInsets.only(top: 10, right: 20),
+                              width: MediaQuery.of(context).size.width * 0.7,
+                              decoration: BoxDecoration(
+                                  color: Color(0xff16172a),
+                                  border: Border.all(color: Color(0xffff8181)),
+                                  borderRadius: BorderRadius.circular(6.0)),
+                              child: Center(
+                                  child: Text(
+                                      'Tip: Click on the destination marker to get google map directions/routing options',
+                                      // softWrap: true,
+                                      style:
+                                          TextStyle(color: Color(0xffff8181))),)),
+                          Container(
+                              height: 45,
+                              padding: EdgeInsets.all(10),
+                              margin: EdgeInsets.only(top: 20, right: 20),
+                              width: MediaQuery.of(context).size.width * 0.7,
+                              decoration: BoxDecoration(
+                                  color: Color(0xff16172a),
+                                  border: Border.all(color: Color(0xffff8181)),
+                                  borderRadius: BorderRadius.circular(6.0)),
+                              child: Center(
+                                  child: Row(
+                                    // mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Destination: ',
+                                          style:
+                                              TextStyle(color: Color(0xffff8181))),
+                                      Text(destinationAdressName.toString(),
+                                          style:
+                                              TextStyle(color: Color(0xfff4f4f4))),
+                                    ],
+                                  ))),
+                                   
+                        ],
+                      )),
                   Align(
                     alignment: Alignment.topRight,
                     child: Column(
@@ -527,7 +575,6 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                       ],
                     ),
                   ),
-              
                 ]),
               ),
       ),

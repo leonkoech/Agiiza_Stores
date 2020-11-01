@@ -82,8 +82,8 @@ class _LiquorTabState extends State<LiquorTab> {
                           imageUrl: document.data()['imageUrl'],
                           liquorId: document.data()['docId'],
                           liquorName: document.data()['liquorName'],
-                          liquorPrice: document.data()['liquorPrice'],
-                          liquorQty: document.data()['liquorVolume'],
+                          liquorPrice: document.data()['liquorPrice'].toString(),
+                          liquorQty: document.data()['liquorVolume'].toString(),
                           activity: document.data()['active'],
                         );
                       } else {
@@ -300,8 +300,8 @@ class _AddLiquorState extends State<AddLiquor> {
       'storeId': uid,
       'docId': documentId,
       'liquorName': liquorNameController.text,
-      'liquorVolume': liquorVolumeController.text,
-      'liquorPrice': liquorPriceController.text,
+      'liquorVolume': int.parse(liquorVolumeController.text),
+      'liquorPrice': int.parse(liquorPriceController.text),
       'active': _isSwitched,
       'imageUrl': _uploadedFileURL
     }).then((value) {
@@ -579,8 +579,8 @@ class _EditLiquorState extends State<EditLiquor> {
           _liquorImageUrl = value.docs[0].data()['imageUrl'];
           _isSwitched = value.docs[0].data()['active'];
           liquorVolumeController.text = value.docs[0].data()['liquorVolume'];
-          liquorPriceController.text = value.docs[0].data()['liquorPrice'];
-          liquorNameController.text = value.docs[0].data()['liquorName'];
+          liquorPriceController.text = value.docs[0].data()['liquorPrice'].toString();
+          liquorNameController.text = value.docs[0].data()['liquorName'].toString();
           _liquorQty = value.docs[0].data()['liquorVolume'];
           _liquorPrice = value.docs[0].data()['liquorPrice'];
           _liquorName = value.docs[0].data()['liquorName'];
@@ -633,10 +633,10 @@ class _EditLiquorState extends State<EditLiquor> {
           ? liquorNameController.text
           : _liquorName,
       'liquorVolume': liquorVolumeController.text != ''
-          ? liquorVolumeController.text
+          ? int.parse(liquorVolumeController.text)
           : _liquorQty,
       'liquorPrice': liquorPriceController.text != ''
-          ? liquorPriceController.text
+          ? int.parse(liquorPriceController.text)
           : _liquorPrice,
       'active': _isSwitched,
       'imageUrl': _uploadedFileURL != null ? _uploadedFileURL : _liquorImageUrl

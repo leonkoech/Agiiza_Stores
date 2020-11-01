@@ -88,11 +88,11 @@ class _OrderTabState extends State<OrderTab> {
                 // child: OrderList(status: '0'),
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
-                          .collection('Orders')
-                          .where('storeId', isEqualTo: storeId)
-                          .where('statusCode', isEqualTo: orderSelected)
-                          .orderBy('orderPlaced', descending: true)
-                              .snapshots(),
+                      .collection('Orders')
+                      .where('storeId', isEqualTo: storeId)
+                      .where('statusCode', isEqualTo: orderSelected)
+                      .orderBy('orderPlaced', descending: true)
+                      .snapshots(),
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasError)
@@ -182,7 +182,7 @@ class _OrderTabState extends State<OrderTab> {
                             print('Processing');
                           },
                         ),
-                   orderSelected == 2
+                  orderSelected == 2
                       ? orderBtn4(context, 'Dispatched', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
@@ -204,7 +204,7 @@ class _OrderTabState extends State<OrderTab> {
                             print('Delivered');
                           },
                         ),
-                        orderSelected == 4
+                  orderSelected == 4
                       ? orderBtn4(context, 'Cancelled', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
@@ -243,6 +243,7 @@ orderBtn(context, text, txtcolor, bgcolor) {
         style: TextStyle(fontSize: 10, color: Color(0xffe6f1ff)),
       )));
 }
+
 orderBtn4(context, text, txtcolor, bgcolor) {
   return Container(
       height: 40,
@@ -257,6 +258,7 @@ orderBtn4(context, text, txtcolor, bgcolor) {
         style: TextStyle(fontSize: 10, color: Color(0xffe6f1ff)),
       )));
 }
+
 orderBtnInactive4(context, text, txtcolor, bgcolor) {
   return Container(
     height: 40,
@@ -272,6 +274,7 @@ orderBtnInactive4(context, text, txtcolor, bgcolor) {
         child: Text(text, style: TextStyle(fontSize: 10, color: txtcolor))),
   );
 }
+
 orderBtnInactive(context, text, txtcolor, bgcolor) {
   return Container(
     height: 40,
@@ -993,6 +996,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                                   builder: (context) => OrderRoutingMap(
                                         lat: convertToDouble(_orderLocation, 0),
                                         lng: convertToDouble(_orderLocation, 1),
+                                        statusCode: _orderStatus,
+                                        orderId: widget.orderId,
                                         orderLocation: LatLng(
                                             convertToDouble(_orderLocation, 0),
                                             convertToDouble(_orderLocation, 1)),
@@ -1111,7 +1116,13 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
     load();
     FirebaseFirestore.instance.collection('Orders').doc(widget.orderId).update({
       'statusCode': _value,
-      _value==1?'processingTime':_value==2?'dispatchedTime':_value==3?'deliveredTime':'cancelledTime': DateTime.now()
+      _value == 1
+          ? 'processingTime'
+          : _value == 2
+              ? 'dispatchedTime'
+              : _value == 3
+                  ? 'deliveredTime'
+                  : 'cancelledTime': DateTime.now()
     }).then((value) {
       load();
       Fluttertoast.showToast(

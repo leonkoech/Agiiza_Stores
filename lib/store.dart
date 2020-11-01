@@ -96,7 +96,8 @@ class _MyStoreState extends State<MyStore> {
     final User user = auth.currentUser;
     final uid = user.uid;
 
-    return new StreamBuilder(
+    return new 
+    StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('Stores')
             .doc(uid)

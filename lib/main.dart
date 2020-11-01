@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'location.dart';
 import 'events.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'order.dart';
 import 'store.dart';
@@ -1360,7 +1361,7 @@ class _SignUpState extends State<SignUp> {
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) => Map()));
+                                                builder: (context) => Maps()));
                                       },
                                       child: Container(
                                         decoration: BoxDecoration(
@@ -1407,7 +1408,7 @@ class _SignUpState extends State<SignUp> {
                                                       context,
                                                       MaterialPageRoute(
                                                           builder: (context) =>
-                                                              Map()));
+                                                              Maps()));
                                                 },
                                               ),
                                       ),
@@ -1527,10 +1528,37 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController orderSearch = TextEditingController();
   FirebaseAuth auth = FirebaseAuth.instance;
   String userId;
+    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+ 
+
+  void firebaseCloudMessagingListeners() {
+     final User user = auth.currentUser;
+    final uid = user.uid;
+    _firebaseMessaging.subscribeToTopic(uid);
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+        setState(() {
+          // _firebaseMessaging.getToken().then((token) {
+          //   print("token is: " + token);
+          // });
+          // when the notification is clicked open the page that contains the data
+        });
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+      },
+    );
+  }
   @override
   void initState() {
     super.initState();
     getUserId();
+      firebaseCloudMessagingListeners();
+
   }
 
   getUserId() {
@@ -1713,10 +1741,8 @@ class _HomePageState extends State<HomePage> {
                                       imageUrl: document.data()['imageUrl'],
                                       liquorId: document.data()['docId'],
                                       liquorName: document.data()['liquorName'],
-                                      liquorPrice:
-                                          document.data()['liquorPrice'],
-                                      liquorQty:
-                                          document.data()['liquorVolume'],
+                                      liquorPrice: document.data()['liquorPrice'].toString(),
+                                      liquorQty: document.data()['liquorVolume'].toString(),
                                       activity: document.data()['active'],
                                     );
                                   } else {

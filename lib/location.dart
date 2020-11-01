@@ -20,12 +20,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:http/http.dart' as http;
 
-class Map extends StatefulWidget {
+class Maps extends StatefulWidget {
   @override
-  MapState createState() => MapState();
+  MapsState createState() => MapsState();
 }
 
-class MapState extends State<Map> {
+class MapsState extends State<Maps> {
   GoogleMapController controller1;
 
   static LatLng _center = LatLng(-15.4630239974464, 28.363397732282127);
