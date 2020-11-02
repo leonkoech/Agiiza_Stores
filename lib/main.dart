@@ -117,7 +117,7 @@ class _LoadingpageState extends State<Loadingpage> {
             timeInSecForIosWeb: 1,
             backgroundColor: Color(0xff16172a),
             textColor: Color(0xfff4f4f4),
-            fontSize: 10.0);
+            fontSize: 13.0);
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => HomePage()),
             (Route<dynamic> route) => false);
@@ -272,7 +272,7 @@ class _LoginPageState extends State<LoginPage> {
                 timeInSecForIosWeb: 1,
                 backgroundColor: Color(0xff16172a),
                 textColor: Color(0xfff4f4f4),
-                fontSize: 10.0);
+                fontSize: 13.0);
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => HomePage()),
                 (Route<dynamic> route) => false);
@@ -285,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
                 timeInSecForIosWeb: 1,
                 backgroundColor: Color(0xff16172a),
                 textColor: Color(0xfff4f4f4),
-                fontSize: 10.0);
+                fontSize: 13.0);
           });
         }
       } catch (e) {
@@ -302,7 +302,7 @@ class _LoginPageState extends State<LoginPage> {
               timeInSecForIosWeb: 1,
               backgroundColor: Color(0xffff8181),
               textColor: Color(0xfff4f4f4),
-              fontSize: 10.0);
+              fontSize: 13.0);
         }
       }
     }
@@ -740,7 +740,7 @@ class _SignUpState extends State<SignUp> {
               timeInSecForIosWeb: 1,
               backgroundColor: Color(0xff16172a),
               textColor: Color(0xfff4f4f4),
-              fontSize: 10.0);
+              fontSize: 13.0);
         });
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
@@ -753,7 +753,7 @@ class _SignUpState extends State<SignUp> {
               timeInSecForIosWeb: 1,
               backgroundColor: Color(0xff16172a),
               textColor: Color(0xfff4f4f4),
-              fontSize: 10.0);
+              fontSize: 13.0);
         } else if (e.code == 'email-already-in-use') {
           print('The account already exists for that email.');
           Fluttertoast.showToast(
@@ -763,7 +763,7 @@ class _SignUpState extends State<SignUp> {
               timeInSecForIosWeb: 1,
               backgroundColor: Color(0xff16172a),
               textColor: Color(0xfff4f4f4),
-              fontSize: 10.0);
+              fontSize: 13.0);
         }
         results = false;
       } catch (e) {
@@ -775,7 +775,7 @@ class _SignUpState extends State<SignUp> {
             timeInSecForIosWeb: 1,
             backgroundColor: Color(0xff16172a),
             textColor: Color(0xfff4f4f4),
-            fontSize: 10.0);
+            fontSize: 13.0);
         results = false;
       }
     } else {
@@ -788,7 +788,7 @@ class _SignUpState extends State<SignUp> {
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
           textColor: Color(0xfff4f4f4),
-          fontSize: 10.0);
+          fontSize: 13.0);
     }
     return results;
   }
@@ -814,7 +814,7 @@ class _SignUpState extends State<SignUp> {
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
           textColor: Color(0xfff4f4f4),
-          fontSize: 10.0);
+          fontSize: 13.0);
       load();
     });
   }
@@ -846,7 +846,7 @@ class _SignUpState extends State<SignUp> {
             timeInSecForIosWeb: 1,
             backgroundColor: Color(0xff16172a),
             textColor: Color(0xfff4f4f4),
-            fontSize: 10.0);
+            fontSize: 13.0);
       });
     }).catchError((err) {
       load();
@@ -857,7 +857,7 @@ class _SignUpState extends State<SignUp> {
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
           textColor: Color(0xfff4f4f4),
-          fontSize: 10.0);
+          fontSize: 13.0);
     });
   }
 

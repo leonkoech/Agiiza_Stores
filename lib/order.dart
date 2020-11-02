@@ -1124,7 +1124,9 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
               ? 'dispatchedTime'
               : _value == 3
                   ? 'deliveredTime'
-                  : 'cancelledTime': DateTime.now()
+                  : 'cancelledTime': DateTime.now(),
+      // if value is 4 select who cancelled the order
+      _value == 4?'cancelledBy': 'store':null,
     }).then((value) {
       load();
       Fluttertoast.showToast(
@@ -1134,7 +1136,7 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
           textColor: Color(0xfff4f4f4),
-          fontSize: 10.0);
+          fontSize: 13.0);
       Navigator.pop(context);
     });
   }
@@ -1280,7 +1282,7 @@ class _OrderStatusPopupState extends State<OrderStatusPopup> {
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.35,
                           child: Center(
-                              child: Text('Cancel',
+                              child: Text('Close',
                                   style: TextStyle(
                                       color: Color(0xfff4f4f4), fontSize: 12))),
                         ),

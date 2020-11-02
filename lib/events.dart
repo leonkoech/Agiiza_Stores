@@ -644,7 +644,7 @@ class _EditEventState extends State<EditEvent> {
           timeInSecForIosWeb: 1,
           backgroundColor: Color(0xff16172a),
           textColor: Color(0xfff4f4f4),
-          fontSize: 10.0);
+          fontSize: 13.0);
 
       // show a toast that says 'event has been uploaded'
       Navigator.pop(context);

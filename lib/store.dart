@@ -647,7 +647,7 @@ class _MyStoreState extends State<MyStore> {
                           timeInSecForIosWeb: 1,
                           backgroundColor: Color(0xff16172a),
                           textColor: Color(0xfff4f4f4),
-                          fontSize: 10.0);
+                          fontSize: 13.0);
                       load();
                       Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(

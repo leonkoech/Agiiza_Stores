@@ -32,6 +32,32 @@ exports.sendPushNotification = functions.firestore.document('/Orders/{orderId}')
   return admin.messaging().sendToTopic(values.storeId, payload,options);
 });
 
+exports.sendNotificationOnCancellation = functions.firestore.document('/Orders/{orderId}').onUpdate((change, context) => {
+      // Get an object representing the document
+      // e.g. {'name': 'Marie', 'age': 66}
+      const newValue = change.after.data();
+      var payload = {
+        notification: {
+          title: 'An Order Has Been Cancelled',
+          body: 'Order Number: '+newValue.orderId+' Has Been Cancelled By the customer at'+newValue.cancelledTime,
+          sound: 'dedfault',
+          image: newValue.imageUrl
+          }    
+      } 
+        //Create an options object that contains the time to live for the notification and the priority
+        const options = {
+          priority: "high",
+          timeToLive: 60 * 60 * 24
+          };
+      // perform desired operations ...
+      if(newValue.statusCode==4){
+        // meaning the order has been cancelled
+        if(newValue.cancelledBy=='customer'){
+          // send a push notification to the store
+          return admin.messaging().sendToTopic(newValue.storeId, payload,options);
+        }
+      }
+});
 // export const getData = functions.https.onCall((data, context) => {
 //     // verify Firebase Auth ID token
 //     if (!context.auth) {
