@@ -39,7 +39,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      color: Color(0xff16172a),
       title: 'Agiiza Stores',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         // This makes the visual density adapt to the platform that you run
@@ -172,18 +174,15 @@ class _LandingPageState extends State<LandingPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                       Container(
-                          // height: 100,
-                          // width: 100,
-                          // child: ClipRect(child: Text('agiiza')
-                          //     // child: Image(
-                          //     //     image:
-                          //     //         AssetImage('assets/images/liquor.png'))
-                          //     )
+                          child:   ClipRect(
+                    
+                              child: new Image.asset('assets/images/AgiizaLogo.png',width:100,height:100),
+                              ),
                               ),
                       Text('Agiiza Stores',
                           style: TextStyle(
                               fontSize: 30,
-                              color: Color(0xffe1e1e1),
+                              color: Color(0xffff8181),
                               fontWeight: FontWeight.bold)),
                       GestureDetector(
                         onTap: () {
@@ -328,7 +327,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                   padding: EdgeInsets.only(top: 10, bottom: 6),
-                  child: Text('agiiza stores',
+                  child: Text('Agiiza Stores',
                       style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.bold,
@@ -342,15 +341,15 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'Welcome back to Agiiza',
                             style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0x4fe1e1e1)),
+                                fontSize: 21,
+                                fontWeight: FontWeight.normal,
+                                color: Color(0x5ff4f4f4)),
                             textAlign: TextAlign.center,
                           )))),
 
               Padding(
                   padding: EdgeInsets.only(top: 6, bottom: 6),
-                  child: Text('Please Sign in with email',
+                  child: Text('Please Sign in with your email and password',
                       style:
                           TextStyle(fontSize: 18, color: Color(0x4fe1e1e1)))),
               // text entry box for email

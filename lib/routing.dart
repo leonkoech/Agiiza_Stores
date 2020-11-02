@@ -29,7 +29,13 @@ class OrderRoutingMap extends StatefulWidget {
   final orderLocation;
   final lat, lng;
   final statusCode, orderId;
-  const OrderRoutingMap({Key key, this.orderLocation, this.lat, this.lng,@required this.statusCode, this.orderId})
+  const OrderRoutingMap(
+      {Key key,
+      this.orderLocation,
+      this.lat,
+      this.lng,
+      @required this.statusCode,
+      this.orderId})
       : super(key: key);
   @override
   OrderRoutingMapState createState() => OrderRoutingMapState();
@@ -65,6 +71,7 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
   }
 
   _createPolylines(startlat, startlng, destinationlat, destinationlng) async {
+    // polylines.clear();
     // Initializing PolylinePoints
     polylinePoints = pos.PolylinePoints();
 
@@ -112,7 +119,7 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
     // Initializing Polyline
     Polyline polyline = Polyline(
       polylineId: id,
-      color: Colors.red,
+      color: Color(0xdfff8181),
       points: polylineCoordinates,
       width: 3,
     );
@@ -297,6 +304,8 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
         zoom: 12.0,
       ),
     ));
+   
+   
   }
 
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -402,6 +411,9 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      color: Color(0xff16172a),
+      title: 'Agiiza Stores',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Color(0xff16172a),
         appBar: AppBar(
@@ -463,15 +475,15 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                             });
                       },
                       child: Container(
-                        margin: EdgeInsets.all(10),
+                          margin: EdgeInsets.only(left:7,bottom: 8),
                           decoration: BoxDecoration(
                             color: Color(0xffff8181),
                             borderRadius: BorderRadius.all(Radius.circular(6)),
                           ),
-                          width: MediaQuery.of(context).size.width * 0.3,
+                          width: MediaQuery.of(context).size.width * 0.4,
                           height: 40,
                           child: Center(
-                            child: Text('Change status',
+                            child: Text('Change Order Status',
                                 style: TextStyle(
                                   color: Color(0xffe1e1e1),
                                   fontSize: 13,
@@ -480,46 +492,45 @@ class OrderRoutingMapState extends State<OrderRoutingMap> {
                     ),
                   ),
                   Align(
-                      alignment: Alignment.topCenter,
+                      alignment: Alignment.topLeft,
                       child: Column(
                         children: [
-                           Container(
-                              // height: 45,
-                              padding: EdgeInsets.all(10),
-                              margin: EdgeInsets.only(top: 10, right: 20),
-                              width: MediaQuery.of(context).size.width * 0.7,
+                          Container(
+                              height: 45,
+                              padding: EdgeInsets.only(left:10,right:10),
+                              margin: EdgeInsets.only(top: 10, left: 20),
+                              width: MediaQuery.of(context).size.width * 0.75,
                               decoration: BoxDecoration(
                                   color: Color(0xff16172a),
                                   border: Border.all(color: Color(0xffff8181)),
                                   borderRadius: BorderRadius.circular(6.0)),
                               child: Center(
-                                  child: Text(
-                                      'Tip: Click on the destination marker to get google map directions/routing options',
-                                      // softWrap: true,
-                                      style:
-                                          TextStyle(color: Color(0xffff8181))),)),
+                                child: Text(
+                                    'Tip: Click on the destination marker to get google map directions/routing options',
+                                    // softWrap: true,
+                                    style: TextStyle(color: Color(0xffff8181))),
+                              )),
                           Container(
                               height: 45,
                               padding: EdgeInsets.all(10),
-                              margin: EdgeInsets.only(top: 20, right: 20),
-                              width: MediaQuery.of(context).size.width * 0.7,
+                              margin: EdgeInsets.only(top: 20, left: 20),
+                              width: MediaQuery.of(context).size.width * 0.75,
                               decoration: BoxDecoration(
                                   color: Color(0xff16172a),
                                   border: Border.all(color: Color(0xffff8181)),
                                   borderRadius: BorderRadius.circular(6.0)),
                               child: Center(
                                   child: Row(
-                                    // mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text('Destination: ',
-                                          style:
-                                              TextStyle(color: Color(0xffff8181))),
-                                      Text(destinationAdressName.toString(),
-                                          style:
-                                              TextStyle(color: Color(0xfff4f4f4))),
-                                    ],
-                                  ))),
-                                   
+                                // mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Destination: ',
+                                      style:
+                                          TextStyle(color: Color(0xffff8181))),
+                                  Text(destinationAdressName.toString(),
+                                      style:
+                                          TextStyle(color: Color(0xfff4f4f4))),
+                                ],
+                              ))),
                         ],
                       )),
                   Align(
@@ -854,6 +865,9 @@ class UpdateMapState extends State<UpdateMap> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+     color: Color(0xff16172a),
+      title: 'Agiiza Stores',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Color(0xff16172a),
         appBar: AppBar(

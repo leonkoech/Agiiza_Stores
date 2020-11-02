@@ -32,6 +32,7 @@ dependencies:
   flutter_spinkit: ^4.1.2+1
   path_provider: ^1.6.22
   date_time_picker: "^1.0.2"
+  # flutter_launcher_icons: ^0.8.1
 
   # general packages
   intl: ^0.16.1
@@ -60,6 +61,10 @@ dependencies:
   cloud_functions: ^0.6.0+1
   firebase_messaging: ^7.0.3
 
+# flutter_icons:
+#   image_path: "assets/images/AgiizaLogo.png" 
+#   android: true
+#   ios: true
 
 dev_dependencies:
   pedantic: ^1.9.0
@@ -84,6 +89,8 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/
+    - assets/images/arrow.png
+    - assets/images/AgiizaLogo.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

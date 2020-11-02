@@ -316,6 +316,9 @@ class MapsState extends State<Maps> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      color: Color(0xff16172a),
+      title: 'Agiiza Stores',
+      debugShowCheckedModeBanner: false,
       home: _loader
           ? Scaffold(
             backgroundColor: Color(0xff16172a),
@@ -912,6 +915,9 @@ class UpdateMapState extends State<UpdateMap> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      color: Color(0xff16172a),
+      title: 'Agiiza Stores',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: Color(0xff16172a),
         appBar: AppBar(

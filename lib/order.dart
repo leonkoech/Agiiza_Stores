@@ -613,6 +613,7 @@ class _OrderDetailsState extends State<OrderDetails> {
   @override
   void initState() {
     super.initState();
+    imageCache.clear();
     fetchOrderDetails();
   }
 
@@ -742,6 +743,7 @@ class _OrderDetailsState extends State<OrderDetails> {
               padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0.0),
               child: ListView(
                 children: [
+               
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
