@@ -834,6 +834,7 @@ class _SignUpState extends State<SignUp> {
       'firstName': firstNameController.text,
       'lastName': lastNameController.text,
       'phoneNumber': phoneNumberController.text,
+      'rating': 0,
     }).then((value) {
       writeAuthDetails(emailController.text, passwordController.text)
           .then((value) {
