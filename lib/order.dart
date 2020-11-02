@@ -4,6 +4,7 @@ import 'package:agiiza_stores/routing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'location.dart';
 import 'events.dart';
@@ -86,27 +87,12 @@ class _OrderTabState extends State<OrderTab> {
                 padding: EdgeInsets.only(left: 10, right: 10),
                 // child: OrderList(status: '0'),
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: orderSelected == 0
-                      ? FirebaseFirestore.instance
-                          .collection('Orders')
-                          .where('storeId', isEqualTo: storeId)
-                          .where('statusCode', isEqualTo: 0)
-                          .orderBy('orderPlaced', descending: true)
-                          .snapshots()
-                      : orderSelected == 1
-                          ? FirebaseFirestore.instance
-                              .collection('Orders')
-                              .where('storeId', isEqualTo: storeId)
-                              .where('statusCode', isGreaterThanOrEqualTo: 1)
-                              .where('statusCode', isLessThanOrEqualTo: 2)
-                              .orderBy('orderPlaced', descending: true)
-                              .snapshots()
-                          : FirebaseFirestore.instance
-                              .collection('Orders')
-                              .where('storeId', isEqualTo: storeId)
-                              .where('statusCode', isGreaterThanOrEqualTo: 3)
-                              .orderBy('orderPlaced', descending: true)
-                              .snapshots(),
+                  stream: FirebaseFirestore.instance
+                      .collection('Orders')
+                      .where('storeId', isEqualTo: storeId)
+                      .where('statusCode', isEqualTo: orderSelected)
+                      .orderBy('orderPlaced', descending: true)
+                      .snapshots(),
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasError)
@@ -175,10 +161,10 @@ class _OrderTabState extends State<OrderTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   orderSelected == 0
-                      ? orderBtn(context, 'Placed', Color(0xffe6f1ff),
+                      ? orderBtn4(context, 'Placed', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Placed',
+                          child: orderBtnInactive4(context, 'Placed',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(0);
@@ -186,25 +172,47 @@ class _OrderTabState extends State<OrderTab> {
                           },
                         ),
                   orderSelected == 1
-                      ? orderBtn(context, 'Dispatched', Color(0xffe6f1ff),
+                      ? orderBtn4(context, 'Processing', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Dispatched',
+                          child: orderBtnInactive4(context, 'Processing',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(1);
-                            print('Dipoatched');
+                            print('Processing');
                           },
                         ),
                   orderSelected == 2
-                      ? orderBtn(context, 'Delivered', Color(0xffe6f1ff),
+                      ? orderBtn4(context, 'Dispatched', Color(0xffe6f1ff),
                           Color(0xffff8181))
                       : GestureDetector(
-                          child: orderBtnInactive(context, 'Delivered',
+                          child: orderBtnInactive4(context, 'Dispatched',
                               Color(0xffff8181), Color(0xffff8181)),
                           onTap: () {
                             clicked(2);
+                            print('Dipoatched');
+                          },
+                        ),
+                  orderSelected == 3
+                      ? orderBtn4(context, 'Delivered', Color(0xffe6f1ff),
+                          Color(0xffff8181))
+                      : GestureDetector(
+                          child: orderBtnInactive4(context, 'Delivered',
+                              Color(0xffff8181), Color(0xffff8181)),
+                          onTap: () {
+                            clicked(3);
                             print('Delivered');
+                          },
+                        ),
+                  orderSelected == 4
+                      ? orderBtn4(context, 'Cancelled', Color(0xffe6f1ff),
+                          Color(0xffff8181))
+                      : GestureDetector(
+                          child: orderBtnInactive4(context, 'Cancelled',
+                              Color(0xffff8181), Color(0xffff8181)),
+                          onTap: () {
+                            clicked(4);
+                            print('Cancelled');
                           },
                         ),
                 ],
@@ -234,6 +242,37 @@ orderBtn(context, text, txtcolor, bgcolor) {
         text,
         style: TextStyle(fontSize: 10, color: Color(0xffe6f1ff)),
       )));
+}
+
+orderBtn4(context, text, txtcolor, bgcolor) {
+  return Container(
+      height: 40,
+      width: MediaQuery.of(context).size.width * 0.17,
+      decoration: BoxDecoration(
+        color: bgcolor,
+        borderRadius: BorderRadius.circular(6.0),
+      ),
+      child: Center(
+          child: Text(
+        text,
+        style: TextStyle(fontSize: 10, color: Color(0xffe6f1ff)),
+      )));
+}
+
+orderBtnInactive4(context, text, txtcolor, bgcolor) {
+  return Container(
+    height: 40,
+    width: MediaQuery.of(context).size.width * 0.17,
+    decoration: BoxDecoration(
+      color: Colors.transparent,
+      border: Border.all(
+        color: bgcolor,
+      ),
+      borderRadius: BorderRadius.circular(6.0),
+    ),
+    child: Center(
+        child: Text(text, style: TextStyle(fontSize: 10, color: txtcolor))),
+  );
 }
 
 orderBtnInactive(context, text, txtcolor, bgcolor) {
@@ -444,12 +483,12 @@ class _OrderCardState extends State<OrderCard> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       mainAxisSize: MainAxisSize.max,
                       children: [
-                        Text('Store Name',
+                        Text('Customer Name',
                             style: TextStyle(
                               color: Color(0xfff4f4f4),
                               fontSize: 13,
                             )),
-                        Text(widget.storeName,
+                        Text(widget.customerName,
                             style: TextStyle(
                               color: Color(0xfff4f4f4),
                               fontSize: 13,
@@ -524,9 +563,7 @@ class _OrderCardState extends State<OrderCard> {
                                         ? 'Dispatched'
                                         : widget.statusCode == 3
                                             ? 'Delivered'
-                                            : widget.statusCode == 4
-                                                ? 'Cancelled by Customer'
-                                                : 'Cancelled by Store',
+                                            : 'Cancelled',
                             style: TextStyle(
                               color: Color(0xfff4f4f4),
                               fontSize: 13,
@@ -614,8 +651,7 @@ class _OrderDetailsState extends State<OrderDetails> {
         myLocationEnabled: true,
         compassEnabled: false,
         myLocationButtonEnabled: false,
-        onTap: (_) {
-         });
+        onTap: (_) {});
   }
 
   convertToDouble(lat, step) {
@@ -646,7 +682,7 @@ class _OrderDetailsState extends State<OrderDetails> {
           _liquorQty = value.docs[0].data()['totalQty'];
           _totalAmt = value.docs[0].data()['totalAmount'];
           _orderStatus = value.docs[0].data()['statusCode'];
-           _imageUrl = value.docs[0].data()['imageUrl'];
+          _imageUrl = value.docs[0].data()['imageUrl'];
           _liquorName = value.docs[0].data()['liquorName'];
           _liquorPrice = value.docs[0].data()['liquorPrice'];
           _liquorVolume = value.docs[0].data()['liquorQty'];
@@ -683,314 +719,325 @@ class _OrderDetailsState extends State<OrderDetails> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading?
-        Scaffold(
-          body:Center(
-            child: SpinKitChasingDots(
-              color: Color(0xffff8181),
-              size: 50.0,
-              duration: Duration(milliseconds: 2000),
-            )
-          )
-        )
-        :Scaffold(
-      appBar: AppBar(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: Text(widget.orderId,
-            style: TextStyle(
-                color: Color(0xfff4f4f4),
-                fontSize: 30,
-                fontWeight: FontWeight.bold)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0.0),
-        child: ListView(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                    DateFormat.yMMMd()
-                        .format(DateTime.parse(_timeStamp.toDate().toString()))
-                        .toString(),
-                    style: TextStyle(
-                      color: Color(0x4fe1e1e1),
-                      fontSize: 15,
-                    )),
-                Text(
-                    DateFormat.jm()
-                        .format(DateTime.parse(_timeStamp.toDate().toString()))
-                        .toString(),
-                    style: TextStyle(
-                      color: Color(0x4fe1e1e1),
-                      fontSize: 15,
-                    )),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  'Order Status',
+    return _isLoading
+        ? Scaffold(
+            body: Center(
+                child: SpinKitChasingDots(
+            color: Color(0xffff8181),
+            size: 50.0,
+            duration: Duration(milliseconds: 2000),
+          )))
+        : Scaffold(
+            appBar: AppBar(
+              elevation: 0.0,
+              backgroundColor: Colors.transparent,
+              centerTitle: true,
+              title: Text(widget.orderId,
                   style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                )
-              ],
+                      color: Color(0xfff4f4f4),
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold)),
             ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-
-                Text(
-                    _orderStatus == 0
-                        ? 'Order Placed'
-                        : _orderStatus == 1
-                            ? 'Processing'
-                            : _orderStatus == 2
-                                ? 'Dispatched'
-                                : _orderStatus == 3
-                                    ? 'Delivered'
-                                    : _orderStatus == 4
-                                        ? 'Cancelled by Customer'
-                                        : 'Cancelled by Store',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                    )),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return OrderStatusPopup(
-                              status: _orderStatus,
-                              orderId: widget.orderId,
-                              width: MediaQuery.of(context).size.width * 0.91);
-                        });
-                  },
-                  child: Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xffff8181),
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      height: 40,
-                      child: Center(
-                        child: Text('Change status',
-                            style: TextStyle(
-                              color: Color(0xffe1e1e1),
-                              fontSize: 13,
-                            )),
-                      )),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  'Order Details',
-                  style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                )
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(_customerName,
-                    style: TextStyle(
-                        color: Color(0xffe1e1e1),
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold)),
-                GestureDetector(
-                  onTap: () {
-                    showAlertDialog(context, _customerPhone, 0);
-                  },
-                  child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xffff8181)),
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      height: 40,
-                      child: Center(
-                        child: Text('Contact',
-                            style: TextStyle(
-                              color: Color(0xffff8181),
-                              fontSize: 13,
-                            )),
-                      )),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text('Phone Number',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-                Text(_customerPhone,
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text('Ordered Items',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-                Text(_liquorQty.toString(),
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text('Amount',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-                Text(_totalAmt.toString() + ' KES',
-                    style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 15,
-                    )),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  'Liquor Ordered',
-                  style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                )
-              ],
-            ),
-            SizedBox(height: 10),
-            Container(
-                padding: EdgeInsets.only(top: 10, bottom: 10),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border(
-                    top: BorderSide(width: 1.0, color: Color(0xffe1e1e1)),
-                    bottom: BorderSide(width: 1.0, color: Color(0xffe1e1e1)),
+            body: Padding(
+              padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0.0),
+              child: ListView(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                          DateFormat.yMMMd()
+                              .format(DateTime.parse(
+                                  _timeStamp.toDate().toString()))
+                              .toString(),
+                          style: TextStyle(
+                            color: Color(0x4fe1e1e1),
+                            fontSize: 15,
+                          )),
+                      Text(
+                          DateFormat.jm()
+                              .format(DateTime.parse(
+                                  _timeStamp.toDate().toString()))
+                              .toString(),
+                          style: TextStyle(
+                            color: Color(0x4fe1e1e1),
+                            fontSize: 15,
+                          )),
+                    ],
                   ),
-                ),
-                child: Column(
-                  children: [
-                    orderListItem(context, _liquorName, _liquorQty.toString(),
-                        _liquorVolume.toString(), _liquorPrice.toString(),),
-                  ],
-                )),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  'Location',
-                  style: TextStyle(
-                      color: Color(0xffe1e1e1),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                )
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(_customerName,
-                    style: TextStyle(
-                        color: Color(0xffe1e1e1),
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold)),
-                GestureDetector(
-                  onTap: () {
-                     Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => OrderRoutingMap(
-                              orderLocation: LatLng(
-                                  convertToDouble(_orderLocation, 0),
-                                  convertToDouble(_orderLocation, 1)),
-                      )));
-        
-
-                  },
-                  child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xffff8181)),
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      height: 40,
-                      child: Center(
-                        child: Text('View Location',
-                            style: TextStyle(
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                        'Order Status',
+                        style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                          _orderStatus == 0
+                              ? 'Order Placed'
+                              : _orderStatus == 1
+                                  ? 'Processing'
+                                  : _orderStatus == 2
+                                      ? 'Dispatched'
+                                      : _orderStatus == 3
+                                          ? 'Delivered'
+                                          : _orderStatus == 4
+                                              ? 'Cancelled by Customer'
+                                              : 'Cancelled by Store',
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 18,
+                          )),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return OrderStatusPopup(
+                                    statusCode: _orderStatus,
+                                    orderId: widget.orderId,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.91);
+                              });
+                        },
+                        child: Container(
+                            decoration: BoxDecoration(
                               color: Color(0xffff8181),
-                              fontSize: 13,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)),
+                            ),
+                            width: MediaQuery.of(context).size.width * 0.3,
+                            height: 40,
+                            child: Center(
+                              child: Text('Change status',
+                                  style: TextStyle(
+                                    color: Color(0xffe1e1e1),
+                                    fontSize: 13,
+                                  )),
                             )),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                        'Order Details',
+                        style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(_customerName,
+                          style: TextStyle(
+                              color: Color(0xffe1e1e1),
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold)),
+                      GestureDetector(
+                        onTap: () {
+                          showAlertDialog(context, _customerPhone, 0);
+                        },
+                        child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Color(0xffff8181)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)),
+                            ),
+                            width: MediaQuery.of(context).size.width * 0.3,
+                            height: 40,
+                            child: Center(
+                              child: Text('Contact',
+                                  style: TextStyle(
+                                    color: Color(0xffff8181),
+                                    fontSize: 13,
+                                  )),
+                            )),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text('Phone Number',
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                      Text(_customerPhone,
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text('Ordered Items',
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                      Text(_liquorQty.toString(),
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text('Amount',
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                      Text(_totalAmt.toString() + ' KES',
+                          style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 15,
+                          )),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                        'Liquor Ordered',
+                        style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                      padding: EdgeInsets.only(top: 10, bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        border: Border(
+                          top: BorderSide(width: 1.0, color: Color(0xffe1e1e1)),
+                          bottom:
+                              BorderSide(width: 1.0, color: Color(0xffe1e1e1)),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          orderListItem(
+                            context,
+                            _liquorName,
+                            _liquorQty.toString(),
+                            _liquorVolume.toString(),
+                            _liquorPrice.toString(),
+                          ),
+                        ],
                       )),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  color: Color(0xffe1e1e1),
-                ),
-                height: 140,
-                width: MediaQuery.of(context).size.width - 20,
-                child: _orderMap(),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                        'Location',
+                        style: TextStyle(
+                            color: Color(0xffe1e1e1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(_customerName,
+                          style: TextStyle(
+                              color: Color(0xffe1e1e1),
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold)),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => OrderRoutingMap(
+                                        lat: convertToDouble(_orderLocation, 0),
+                                        lng: convertToDouble(_orderLocation, 1),
+                                        statusCode: _orderStatus,
+                                        orderId: widget.orderId,
+                                        orderLocation: LatLng(
+                                            convertToDouble(_orderLocation, 0),
+                                            convertToDouble(_orderLocation, 1)),
+                                      )));
+                        },
+                        child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Color(0xffff8181)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)),
+                            ),
+                            width: MediaQuery.of(context).size.width * 0.3,
+                            height: 40,
+                            child: Center(
+                              child: Text('View Location',
+                                  style: TextStyle(
+                                    color: Color(0xffff8181),
+                                    fontSize: 13,
+                                  )),
+                            )),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        color: Color(0xffe1e1e1),
+                      ),
+                      height: 140,
+                      width: MediaQuery.of(context).size.width - 20,
+                      child: _orderMap(),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
-            SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
+          );
   }
 }
 
@@ -1035,10 +1082,14 @@ Widget orderListItem(context, liquorname, qty, litres, price) {
 }
 
 class OrderStatusPopup extends StatefulWidget {
-  final int status;
+  final int statusCode;
   final double width;
   final orderId;
-  const OrderStatusPopup({Key key, @required this.status, @required this.width,@required this.orderId})
+  const OrderStatusPopup(
+      {Key key,
+      @required this.statusCode,
+      @required this.width,
+      @required this.orderId})
       : super(key: key);
   @override
   _OrderStatusPopupState createState() => _OrderStatusPopupState();
@@ -1046,140 +1097,213 @@ class OrderStatusPopup extends StatefulWidget {
 
 class _OrderStatusPopupState extends State<OrderStatusPopup> {
   int _value = 0;
+  bool _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      _value = widget.statusCode;
+    });
+  }
+
+  load() {
+    setState(() {
+      _isLoading = !_isLoading;
+    });
+  }
+
+  _changeOrderStatus() {
+    load();
+    FirebaseFirestore.instance.collection('Orders').doc(widget.orderId).update({
+      'statusCode': _value,
+      _value == 1
+          ? 'processingTime'
+          : _value == 2
+              ? 'dispatchedTime'
+              : _value == 3
+                  ? 'deliveredTime'
+                  : 'cancelledTime': DateTime.now()
+    }).then((value) {
+      load();
+      Fluttertoast.showToast(
+          msg: "Order Status Updated",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0xff16172a),
+          textColor: Color(0xfff4f4f4),
+          fontSize: 10.0);
+      Navigator.pop(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      backgroundColor: Color(0xff16172a),
-      elevation: 10,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.55,
-        width: widget.width,
-        padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(
-              "Order number",
-              style: TextStyle(
-                  fontSize: 30,
-                  color: Color(0xffe1e1e1),
-                  fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Change Order Status",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color(0x9fe1e1e1)),
-            ),
-            GestureDetector(
-              onTap: () => setState(() => _value = 0),
-              child: Container(
-                height: 56,
-                width: widget.width,
-                decoration: BoxDecoration(
-                  color: _value == 0 ? Color(0xffffea81) : Colors.transparent,
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  border: Border.all(
-                      color:
-                          _value == 0 ? Color(0xffffea81) : Color(0xfff4f4f4),
-                      width: 1.0),
+    return _isLoading
+        ? Scaffold(
+            body: Scaffold(
+              backgroundColor: Color(0xff16172a),
+              body: Center(
+                child: SpinKitChasingDots(
+                  color: Color(0xffff8181),
+                  size: 30.0,
+                  duration: Duration(milliseconds: 2000),
                 ),
-                child: Center(
-                    child: Text('Received',
-                        style: TextStyle(
-                            color: _value == 0
-                                ? Color(0xff16172a)
-                                : Color(0xfff4f4f4)))),
               ),
             ),
-            GestureDetector(
-              onTap: () => setState(() => _value = 2),
-              child: Container(
-                height: 56,
-                width: widget.width,
-                decoration: BoxDecoration(
-                  color: _value == 2 ? Color(0xff81c6ff) : Colors.transparent,
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  border: Border.all(
-                      color:
-                          _value == 2 ? Color(0xff81c6ff) : Color(0xfff4f4f4),
-                      width: 1.0),
-                ),
-                child: Center(
-                    child: Text('Processing',
-                        style: TextStyle(color: Color(0xfff4f4f4)))),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => setState(() => _value = 1),
-              child: Container(
-                height: 56,
-                width: widget.width,
-                decoration: BoxDecoration(
-                  color: _value == 1 ? Color(0xff92ff81) : Colors.transparent,
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  border: Border.all(
-                      color:
-                          _value == 1 ? Color(0xff92ff81) : Color(0xfff4f4f4),
-                      width: 1.0),
-                ),
-                child: Center(
-                    child: Text('Completed',
-                        style: TextStyle(
+          )
+        : Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            backgroundColor: Color(0xff16172a),
+            elevation: 10,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.55,
+              width: widget.width,
+              padding:
+                  EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    widget.orderId,
+                    style: TextStyle(
+                        fontSize: 30,
+                        color: Color(0xffe1e1e1),
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Change Order Status",
+                    style: TextStyle(fontSize: 15, color: Color(0x9fe1e1e1)),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _value = 1),
+                    child: Container(
+                      height: 56,
+                      width: widget.width,
+                      decoration: BoxDecoration(
+                        color: _value == 1
+                            ? Color(0xffffea81)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        border: Border.all(
                             color: _value == 1
-                                ? Color(0xff16172a)
-                                : Color(0xfff4f4f4)))),
+                                ? Color(0xffffea81)
+                                : Color(0xfff4f4f4),
+                            width: 1.0),
+                      ),
+                      child: Center(
+                          child: Text('Processing',
+                              style: TextStyle(
+                                  color: _value == 1
+                                      ? Color(0xff16172a)
+                                      : Color(0xfff4f4f4)))),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _value = 2),
+                    child: Container(
+                      height: 56,
+                      width: widget.width,
+                      decoration: BoxDecoration(
+                        color: _value == 2
+                            ? Color(0xff81c6ff)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        border: Border.all(
+                            color: _value == 2
+                                ? Color(0xff81c6ff)
+                                : Color(0xfff4f4f4),
+                            width: 1.0),
+                      ),
+                      child: Center(
+                          child: Text('Dispatched',
+                              style: TextStyle(color: Color(0xfff4f4f4)))),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _value = 3),
+                    child: Container(
+                      height: 56,
+                      width: widget.width,
+                      decoration: BoxDecoration(
+                        color: _value == 3
+                            ? Color(0xff92ff81)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        border: Border.all(
+                            color: _value == 3
+                                ? Color(0xff92ff81)
+                                : Color(0xfff4f4f4),
+                            width: 1.0),
+                      ),
+                      child: Center(
+                          child: Text('Delivered',
+                              style: TextStyle(
+                                  color: _value == 3
+                                      ? Color(0xff16172a)
+                                      : Color(0xfff4f4f4)))),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _value = 4),
+                    child: Container(
+                      height: 56,
+                      width: widget.width,
+                      decoration: BoxDecoration(
+                        color: _value == 4
+                            ? Color(0xffff8181)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        border: Border.all(
+                            color: _value == 4
+                                ? Color(0xffff8181)
+                                : Color(0xfff4f4f4),
+                            width: 1.0),
+                      ),
+                      child: Center(
+                          child: Text('Cancel Order',
+                              style: TextStyle(color: Color(0xfff4f4f4)))),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.35,
+                          child: Center(
+                              child: Text('Cancel',
+                                  style: TextStyle(
+                                      color: Color(0xfff4f4f4), fontSize: 12))),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          _changeOrderStatus();
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.35,
+                          height: 50,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              color: Color(0xffff8181)),
+                          child: Center(
+                              child: Text('Confirm',
+                                  style: TextStyle(
+                                      color: Color(0xfff4f4f4), fontSize: 12))),
+                        ),
+                      )
+                    ],
+                  ),
+                ],
               ),
             ),
-            GestureDetector(
-              onTap: () => setState(() => _value = 3),
-              child: Container(
-                height: 56,
-                width: widget.width,
-                decoration: BoxDecoration(
-                  color: _value == 3 ? Color(0xffff8181) : Colors.transparent,
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  border: Border.all(
-                      color:
-                          _value == 3 ? Color(0xffff8181) : Color(0xfff4f4f4),
-                      width: 1.0),
-                ),
-                child: Center(
-                    child: Text('Cancelled',
-                        style: TextStyle(color: Color(0xfff4f4f4)))),
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.35,
-                  child: Center(
-                      child: Text('Cancel',
-                          style: TextStyle(
-                              color: Color(0xfff4f4f4), fontSize: 12))),
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.35,
-                  height: 50,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      color: Color(0xffff8181)),
-                  child: Center(
-                      child: Text('Confirm',
-                          style: TextStyle(
-                              color: Color(0xfff4f4f4), fontSize: 12))),
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+          );
   }
 }

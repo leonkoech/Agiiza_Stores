@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'location.dart';
 import 'events.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:encrypt/encrypt.dart' as enc;
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'order.dart';
 import 'store.dart';
@@ -172,14 +172,15 @@ class _LandingPageState extends State<LandingPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                       Container(
-                          height: 100,
-                          width: 100,
-                          child: ClipRect(child: Text('agiiza')
-                              // child: Image(
-                              //     image:
-                              //         AssetImage('assets/images/liquor.png'))
-                              )),
-                      Text('agiiza',
+                          // height: 100,
+                          // width: 100,
+                          // child: ClipRect(child: Text('agiiza')
+                          //     // child: Image(
+                          //     //     image:
+                          //     //         AssetImage('assets/images/liquor.png'))
+                          //     )
+                              ),
+                      Text('Agiiza Stores',
                           style: TextStyle(
                               fontSize: 30,
                               color: Color(0xffe1e1e1),
@@ -327,7 +328,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                   padding: EdgeInsets.only(top: 10, bottom: 6),
-                  child: Text('agiiza',
+                  child: Text('agiiza stores',
                       style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.bold,
@@ -1360,7 +1361,7 @@ class _SignUpState extends State<SignUp> {
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) => Map()));
+                                                builder: (context) => Maps()));
                                       },
                                       child: Container(
                                         decoration: BoxDecoration(
@@ -1407,7 +1408,7 @@ class _SignUpState extends State<SignUp> {
                                                       context,
                                                       MaterialPageRoute(
                                                           builder: (context) =>
-                                                              Map()));
+                                                              Maps()));
                                                 },
                                               ),
                                       ),
@@ -1527,10 +1528,37 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController orderSearch = TextEditingController();
   FirebaseAuth auth = FirebaseAuth.instance;
   String userId;
+    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+ 
+
+  void firebaseCloudMessagingListeners() {
+     final User user = auth.currentUser;
+    final uid = user.uid;
+    _firebaseMessaging.subscribeToTopic(uid);
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+        setState(() {
+          // _firebaseMessaging.getToken().then((token) {
+          //   print("token is: " + token);
+          // });
+          // when the notification is clicked open the page that contains the data
+        });
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+      },
+    );
+  }
   @override
   void initState() {
     super.initState();
     getUserId();
+      firebaseCloudMessagingListeners();
+
   }
 
   getUserId() {
@@ -1553,7 +1581,7 @@ class _HomePageState extends State<HomePage> {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           title: _isSearch == false
-              ? Text('AGIIZA',
+              ? Text('AGIIZA STORES',
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 25,
@@ -1713,10 +1741,8 @@ class _HomePageState extends State<HomePage> {
                                       imageUrl: document.data()['imageUrl'],
                                       liquorId: document.data()['docId'],
                                       liquorName: document.data()['liquorName'],
-                                      liquorPrice:
-                                          document.data()['liquorPrice'],
-                                      liquorQty:
-                                          document.data()['liquorVolume'],
+                                      liquorPrice: document.data()['liquorPrice'].toString(),
+                                      liquorQty: document.data()['liquorVolume'].toString(),
                                       activity: document.data()['active'],
                                     );
                                   } else {
@@ -2076,13 +2102,7 @@ Future<File> get _localFile async {
 
 Future<File> writeAuthDetails(email, password) async {
   final file = await _localFile;
-  final key = enc.Key.fromLength(32);
-  final iv = enc.IV.fromLength(8);
-
-  final encrypter = enc.Encrypter(enc.AES(key));
-
-  final encryptedPass = encrypter.encrypt(password, iv: iv);
-  String objText = '{"email": "$email", "password": "$password"}';
+    String objText = '{"email": "$email", "password": "$password"}';
 
   // Write the file.
   return file.writeAsString(objText);
